@@ -1,67 +1,83 @@
-/**
- * Test script for Exchange Rate API integration
- * Run with: node test-rates.js
- */
-
 require('dotenv').config({ path: '.env.local' });
 
-// Test FreeCurrencyAPI with only supported currencies
-async function testFreeCurrencyAPI() {
-  const apiKey = process.env.FREE_CURRENCY_API_KEY || 'fca_live_uL1JE9Q4sDZFVpkzEhEkH9hc276b0dSBT3uTHYYO';
-  const apiUrl = process.env.FREE_CURRENCY_API_URL || 'https://api.freecurrencyapi.com/v1';
-
-  console.log('\n=== Testing FreeCurrencyAPI ===');
-  const url = `${apiUrl}/latest?apikey=${apiKey}&base_currency=USD&currencies=MXN,BRL`;
-  console.log(`API URL: ${url}\n`);
-
+async function testExchangeRateAPI() {
+  const apiKey = '0eafc98275744c50fadabce2';
+  const url = `https://v6.exchangerate-api.com/v6/${apiKey}/latest/USD`;
+  
+  console.log('\n=== Testing ExchangeRate-API ===');
+  console.log(`URL: ${url}\n`);
+  
   try {
     const response = await fetch(url);
-    const result = await response.json();
-
-    if (result.data) {
-      console.log('✅ FreeCurrencyAPI working!');
-      console.log('\nLive Exchange Rates:');
-      console.log(`  USD: 1.00 (base)`);
-      console.log(`  MXN: ${result.data.MXN} (Mexican Peso)`);
-      console.log(`  BRL: ${result.data.BRL} (Brazilian Real)`);
-      console.log('\nFallback Rates (not available in free tier):');
-      console.log(`  ARS: 350.00 (Argentine Peso - approximate)`);
-      console.log(`  COP: 4100.00 (Colombian Peso - approximate)`);
-      console.log(`  GTQ: 7.80 (Guatemalan Quetzal - approximate)`);
+    const data = await response.json();
+    
+    if (data.result === 'success') {
+      console.log('✅ ExchangeRate-API WORKING!\n');
+      console.log('ALL 6 Latin American Currencies:');
+      console.log(`  USD: 1.00`);
+      console.log(`  MXN: ${data.conversion_rates.MXN}`);
+      console.log(`  BRL: ${data.conversion_rates.BRL}`);
+      console.log(`  ARS: ${data.conversion_rates.ARS}`);
+      console.log(`  COP: ${data.conversion_rates.COP}`);
+      console.log(`  GTQ: ${data.conversion_rates.GTQ}`);
       return true;
     } else {
-      console.log('❌ FreeCurrencyAPI failed:', result);
+      console.log('❌ API Error:', data['error-type']);
       return false;
     }
   } catch (error) {
-    console.log('❌ FreeCurrencyAPI error:', error.message);
+    console.log('❌ Error:', error.message);
     return false;
   }
 }
 
-// Run tests
-async function runTests() {
-  console.log('╔════════════════════════════════════════════════╗');
-  console.log('║  LatinBridge Exchange Rate API Test Suite     ║');
-  console.log('╚════════════════════════════════════════════════╝');
-
-  const test = await testFreeCurrencyAPI();
-
-  console.log('\n' + '='.repeat(50));
-  console.log('TEST RESULTS:');
-  console.log('='.repeat(50));
-  console.log(`FreeCurrencyAPI (MXN, BRL): ${test ? '✅ PASS' : '❌ FAIL'}`);
-  console.log('='.repeat(50));
-
-  if (test) {
-    console.log('\n🎉 API is working! Your backend has:');
-    console.log('   ✅ Live rates for USD, MXN, BRL');
-    console.log('   ⚠️  Fallback rates for ARS, COP, GTQ');
-    console.log('\nNote: ExchangeRate-API requires account activation.');
-    console.log('Visit: https://www.exchangerate-api.com to activate your account.');
-  } else {
-    console.log('\n⚠️  API test failed. Check your API key and internet connection.');
+async function testFreeCurrencyAPI() {
+  const apiKey = 'fca_live_uL1JE9Q4sDZFVpkzEhEkH9hc276b0dSBT3uTHYYO';
+  const url = `https://api.freecurrencyapi.com/v1/latest?apikey=${apiKey}&base_currency=USD&currencies=MXN,BRL`;
+  
+  console.log('\n=== Testing FreeCurrencyAPI ===');
+  console.log(`URL: ${url}\n`);
+  
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data.data) {
+      console.log('✅ FreeCurrencyAPI WORKING!\n');
+      console.log('Partial Coverage:');
+      console.log(`  MXN: ${data.data.MXN}`);
+      console.log(`  BRL: ${data.data.BRL}`);
+      return true;
+    } else {
+      console.log('❌ API Error:', data);
+      return false;
+    }
+  } catch (error) {
+    console.log('❌ Error:', error.message);
+    return false;
   }
 }
 
-runTests();
+async function main() {
+  console.log('╔════════════════════════════════════════╗');
+  console.log('║   LatinBridge API Test Suite          ║');
+  console.log('╚════════════════════════════════════════╝');
+  
+  const test1 = await testExchangeRateAPI();
+  const test2 = await testFreeCurrencyAPI();
+  
+  console.log('\n' + '='.repeat(50));
+  console.log('RESULTS:');
+  console.log('='.repeat(50));
+  console.log(`ExchangeRate-API (6 currencies): ${test1 ? '✅ PASS' : '❌ FAIL'}`);
+  console.log(`FreeCurrencyAPI (2 currencies):  ${test2 ? '✅ PASS' : '❌ FAIL'}`);
+  console.log('='.repeat(50));
+  
+  if (test1) {
+    console.log('\n🎉 PERFECT! 100% live coverage for all 6 currencies!');
+  } else if (test2) {
+    console.log('\n✅ Backup working! Using fallbacks for ARS, COP, GTQ');
+  }
+}
+
+main();

@@ -1,7 +1,8 @@
 /**
  * Exchange Rate API Integration
- * Using FreeCurrencyAPI for available currencies (USD, MXN, BRL)
- * Using fallback rates for unavailable currencies (ARS, COP, GTQ)
+ * Using ExchangeRate-API (Primary) for ALL 6 currencies
+ * Using FreeCurrencyAPI (Backup) for MXN and BRL
+ * Provides 100% live coverage for all Latin American currencies!
  */
 
 export interface ExchangeRates {
@@ -13,6 +14,13 @@ export interface ExchangeRates {
   GTQ: number;
 }
 
+interface ExchangeRateAPIResponse {
+  result: string;
+  conversion_rates: Record<string, number>;
+  base_code: string;
+  time_last_update_unix: number;
+}
+
 interface FreeCurrencyAPIResponse {
   data: Record<string, number>;
 }
@@ -21,33 +29,59 @@ const CACHE_DURATION = 30 * 1000; // 30 seconds
 let ratesCache: {
   data: ExchangeRates | null;
   timestamp: number;
+  source: string;
 } = {
   data: null,
   timestamp: 0,
-};
-
-// Approximate fallback rates for currencies not available in free tier
-// These are updated periodically based on market rates
-const FALLBACK_RATES = {
-  USD: 1.0,
-  MXN: 17.5,   // Mexican Peso (available in API - this is backup)
-  BRL: 5.0,    // Brazilian Real (available in API - this is backup)
-  ARS: 350.0,  // Argentine Peso (approximate as of 2025)
-  COP: 4100.0, // Colombian Peso (approximate as of 2025)
-  GTQ: 7.8,    // Guatemalan Quetzal (approximate as of 2025)
+  source: 'none',
 };
 
 /**
- * Fetch from FreeCurrencyAPI
- * Supports: MXN, BRL (from the 32 available currencies)
- * Does NOT support: ARS, COP, GTQ (will use fallback)
+ * Fetch from ExchangeRate-API (Primary - supports ALL currencies!)
+ * API Key: 0eafc98275744c50fadabce2
+ */
+async function fetchFromExchangeRateAPI(): Promise<ExchangeRates | null> {
+  try {
+    const apiKey = process.env.EXCHANGE_RATE_API_KEY || '0eafc98275744c50fadabce2';
+    const apiUrl = process.env.EXCHANGE_RATE_API_URL || 'https://v6.exchangerate-api.com/v6';
+
+    const response = await fetch(`${apiUrl}/${apiKey}/latest/USD`, {
+      next: { revalidate: 30 }
+    });
+
+    if (!response.ok) {
+      throw new Error(`ExchangeRate-API error: ${response.statusText}`);
+    }
+
+    const data: ExchangeRateAPIResponse = await response.json();
+
+    if (data.result !== 'success') {
+      throw new Error(`ExchangeRate-API result: ${data.result}`);
+    }
+
+    return {
+      USD: 1.0,
+      MXN: data.conversion_rates.MXN,
+      BRL: data.conversion_rates.BRL,
+      ARS: data.conversion_rates.ARS,
+      COP: data.conversion_rates.COP,
+      GTQ: data.conversion_rates.GTQ,
+    };
+  } catch (error) {
+    console.error('ExchangeRate-API failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Fetch from FreeCurrencyAPI (Backup - supports MXN, BRL only)
+ * API Key: fca_live_uL1JE9Q4sDZFVpkzEhEkH9hc276b0dSBT3uTHYYO
  */
 async function fetchFromFreeCurrencyAPI(): Promise<Partial<ExchangeRates> | null> {
   try {
     const apiKey = process.env.FREE_CURRENCY_API_KEY || 'fca_live_uL1JE9Q4sDZFVpkzEhEkH9hc276b0dSBT3uTHYYO';
     const apiUrl = process.env.FREE_CURRENCY_API_URL || 'https://api.freecurrencyapi.com/v1';
 
-    // Only request currencies that are supported in the free tier
     const currencies = 'MXN,BRL';
     const response = await fetch(
       `${apiUrl}/latest?apikey=${apiKey}&base_currency=USD&currencies=${currencies}`,
@@ -76,55 +110,80 @@ async function fetchFromFreeCurrencyAPI(): Promise<Partial<ExchangeRates> | null
 }
 
 /**
- * Fetch live exchange rates with fallback strategy
- * 1. Try FreeCurrencyAPI for MXN and BRL
- * 2. Use cached data if available
- * 3. Use hardcoded fallback rates as last resort
+ * Fetch live exchange rates with multi-tier fallback strategy
+ * 1. Try ExchangeRate-API (Primary - ALL 6 currencies)
+ * 2. Try FreeCurrencyAPI (Backup - MXN, BRL only)
+ * 3. Use cached data if available
+ * 4. Use hardcoded fallback rates as last resort
  */
 export async function fetchExchangeRates(): Promise<ExchangeRates> {
   // Check cache first
   const now = Date.now();
   if (ratesCache.data && (now - ratesCache.timestamp) < CACHE_DURATION) {
-    console.log('Using cached exchange rates');
+    console.log(`Using cached exchange rates (source: ${ratesCache.source})`);
     return ratesCache.data;
   }
 
-  // Try to fetch live rates for available currencies
-  console.log('Fetching rates from FreeCurrencyAPI...');
+  // Try primary API (ExchangeRate-API) - supports ALL currencies!
+  console.log('Fetching rates from ExchangeRate-API (Primary)...');
+  let rates = await fetchFromExchangeRateAPI();
+
+  if (rates) {
+    console.log('✅ SUCCESS: All 6 currencies fetched from ExchangeRate-API');
+    ratesCache = {
+      data: rates,
+      timestamp: now,
+      source: 'ExchangeRate-API (All Live)',
+    };
+    return rates;
+  }
+
+  // Try backup API (FreeCurrencyAPI) - supports MXN and BRL
+  console.log('Primary API failed, trying FreeCurrencyAPI (Backup)...');
   const partialRates = await fetchFromFreeCurrencyAPI();
 
-  let rates: ExchangeRates;
-
   if (partialRates && partialRates.MXN && partialRates.BRL) {
-    // Combine live rates with fallback rates
-    console.log('Using live rates for MXN and BRL, fallback for ARS, COP, GTQ');
+    console.log('⚠️  Using FreeCurrencyAPI for MXN and BRL, fallback for ARS, COP, GTQ');
     rates = {
       USD: 1.0,
       MXN: partialRates.MXN,
       BRL: partialRates.BRL,
-      ARS: FALLBACK_RATES.ARS,
-      COP: FALLBACK_RATES.COP,
-      GTQ: FALLBACK_RATES.GTQ,
+      ARS: 350.0,  // Approximate fallback
+      COP: 4100.0, // Approximate fallback
+      GTQ: 7.8,    // Approximate fallback
     };
-  } else {
-    // Use cached data if API failed
-    if (ratesCache.data) {
-      console.log('API failed, using stale cached rates');
-      return ratesCache.data;
-    }
 
-    // Last resort: use all fallback rates
-    console.warn('Using all fallback rates (API unavailable)');
-    rates = { ...FALLBACK_RATES };
+    ratesCache = {
+      data: rates,
+      timestamp: now,
+      source: 'FreeCurrencyAPI (Partial) + Fallback',
+    };
+    return rates;
   }
 
-  // Update cache with fresh data
+  // Use cached data if both APIs fail
+  if (ratesCache.data) {
+    console.warn('⚠️  All APIs failed, using stale cached rates');
+    return ratesCache.data;
+  }
+
+  // Last resort: hardcoded fallback rates
+  console.error('❌ All APIs failed and no cache available, using hardcoded fallback');
+  rates = {
+    USD: 1.0,
+    MXN: 17.5,
+    BRL: 5.0,
+    ARS: 350.0,
+    COP: 4100.0,
+    GTQ: 7.8,
+  };
+
   ratesCache = {
     data: rates,
     timestamp: now,
+    source: 'Hardcoded Fallback',
   };
 
-  console.log('Exchange rates updated successfully');
   return rates;
 }
 
@@ -159,11 +218,8 @@ export async function convertCurrency(
 
 /**
  * Get historical rates (simplified - uses current rate as fallback)
- * In production, integrate with a service that provides historical data
  */
 export async function getHistoricalRates(date: Date): Promise<ExchangeRates> {
-  // For now, return current rates
-  // In production, integrate with APIs like exchangeratesapi.io (paid) or forex APIs
   return fetchExchangeRates();
 }
 
@@ -176,35 +232,42 @@ export function formatCurrencyAmount(amount: number, currency: keyof ExchangeRat
 }
 
 /**
- * Get all rates with metadata
+ * Get all rates with metadata and source information
  */
 export async function getRatesWithMetadata(): Promise<{
   rates: ExchangeRates;
   timestamp: number;
   source: string;
-  liveRates: string[];
-  fallbackRates: string[];
+  allLive: boolean;
 }> {
   const rates = await fetchExchangeRates();
 
   return {
     rates,
     timestamp: Date.now(),
-    source: ratesCache.data ? 'cache' : 'api',
-    liveRates: ['USD', 'MXN', 'BRL'],
-    fallbackRates: ['ARS', 'COP', 'GTQ'],
+    source: ratesCache.source,
+    allLive: ratesCache.source.includes('ExchangeRate-API'),
   };
 }
 
 /**
- * Update fallback rates manually (for admin use)
+ * Test both APIs and return status
  */
-export function updateFallbackRate(currency: keyof ExchangeRates, rate: number): void {
-  if (currency !== 'USD' && currency !== 'MXN' && currency !== 'BRL') {
-    FALLBACK_RATES[currency] = rate;
-    console.log(`Updated fallback rate for ${currency}: ${rate}`);
+export async function testAPIs(): Promise<{
+  primary: { status: string; currencies: number };
+  backup: { status: string; currencies: number };
+}> {
+  const primaryRates = await fetchFromExchangeRateAPI();
+  const backupRates = await fetchFromFreeCurrencyAPI();
 
-    // Invalidate cache to force refresh
-    ratesCache = { data: null, timestamp: 0 };
-  }
+  return {
+    primary: {
+      status: primaryRates ? 'OK' : 'FAILED',
+      currencies: primaryRates ? 6 : 0,
+    },
+    backup: {
+      status: backupRates ? 'OK' : 'FAILED',
+      currencies: backupRates ? 2 : 0,
+    },
+  };
 }
