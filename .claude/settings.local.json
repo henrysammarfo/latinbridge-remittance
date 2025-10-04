@@ -8,7 +8,9 @@
       "Bash(git checkout:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(curl -s \"https://api.freecurrencyapi.com/v1/currencies?apikey=fca_live_uL1JE9Q4sDZFVpkzEhEkH9hc276b0dSBT3uTHYYO\")",
+      "Bash(curl -s \"https://v6.exchangerate-api.com/v6/bdf21f86a1-7f24eff18a-t3l73p/latest/USD\")"
     ],
     "deny": [],
     "ask": []
