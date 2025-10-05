@@ -17,6 +17,7 @@ async function main() {
   console.log("Deploying UserRegistry...");
   const UserRegistry = await hre.ethers.getContractFactory("UserRegistry");
   const userRegistry = await UserRegistry.deploy();
+  console.log("Waiting for deployment transaction...");
   await userRegistry.waitForDeployment();
   const userRegistryAddress = await userRegistry.getAddress();
   deployedContracts.UserRegistry = userRegistryAddress;
@@ -25,7 +26,9 @@ async function main() {
   // Deploy ExchangeRateOracle
   console.log("Deploying ExchangeRateOracle...");
   const ExchangeRateOracle = await hre.ethers.getContractFactory("ExchangeRateOracle");
-  const oracle = await ExchangeRateOracle.deploy();
+  const oracle = await ExchangeRateOracle.deploy({
+    gasLimit: 5000000
+  });
   await oracle.waitForDeployment();
   const oracleAddress = await oracle.getAddress();
   deployedContracts.ExchangeRateOracle = oracleAddress;
@@ -34,7 +37,9 @@ async function main() {
   // Deploy RemittanceVault
   console.log("Deploying RemittanceVault...");
   const RemittanceVault = await hre.ethers.getContractFactory("RemittanceVault");
-  const vault = await RemittanceVault.deploy();
+  const vault = await RemittanceVault.deploy({
+    gasLimit: 5000000
+  });
   await vault.waitForDeployment();
   const vaultAddress = await vault.getAddress();
   deployedContracts.RemittanceVault = vaultAddress;
@@ -49,7 +54,9 @@ async function main() {
   // Deploy SavingsPool
   console.log("Deploying SavingsPool...");
   const SavingsPool = await hre.ethers.getContractFactory("SavingsPool");
-  const savingsPool = await SavingsPool.deploy();
+  const savingsPool = await SavingsPool.deploy({
+    gasLimit: 5000000
+  });
   await savingsPool.waitForDeployment();
   const savingsPoolAddress = await savingsPool.getAddress();
   deployedContracts.SavingsPool = savingsPoolAddress;
@@ -58,7 +65,9 @@ async function main() {
   // Deploy MicroloanManager
   console.log("Deploying MicroloanManager...");
   const MicroloanManager = await hre.ethers.getContractFactory("MicroloanManager");
-  const loanManager = await MicroloanManager.deploy();
+  const loanManager = await MicroloanManager.deploy({
+    gasLimit: 5000000
+  });
   await loanManager.waitForDeployment();
   const loanManagerAddress = await loanManager.getAddress();
   deployedContracts.MicroloanManager = loanManagerAddress;
@@ -73,7 +82,9 @@ async function main() {
   // Deploy PaymentNetworks
   console.log("Deploying PaymentNetworks...");
   const PaymentNetworks = await hre.ethers.getContractFactory("PaymentNetworks");
-  const paymentNetworks = await PaymentNetworks.deploy();
+  const paymentNetworks = await PaymentNetworks.deploy({
+    gasLimit: 5000000
+  });
   await paymentNetworks.waitForDeployment();
   const paymentNetworksAddress = await paymentNetworks.getAddress();
   deployedContracts.PaymentNetworks = paymentNetworksAddress;
