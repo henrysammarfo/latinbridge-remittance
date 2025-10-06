@@ -81,9 +81,12 @@ export function ReviewStep({ data, onConfirm, onBack }: ReviewStepProps) {
       const fromCurrency = getCurrencyEnum(data.fromCurrency)
       const toCurrency = getCurrencyEnum(data.toCurrency)
 
-      // For demo, we'll use the recipient's ID as an address
-      // In production, you'd fetch the actual wallet address from your backend
-      const recipientAddress = data.recipient.id as `0x${string}`
+      // Get recipient wallet address
+      const recipientAddress = data.recipient.walletAddress as `0x${string}`
+
+      if (!recipientAddress || !recipientAddress.startsWith('0x')) {
+        throw new Error('Invalid recipient wallet address')
+      }
 
       // Send the remittance
       const hash = await sendRemittance(

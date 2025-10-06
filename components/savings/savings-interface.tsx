@@ -11,12 +11,8 @@ import { useSavings } from "@/lib/web3/hooks/useSavings"
 import { Currency } from "@/lib/web3/hooks/useContracts"
 import { useAccount } from "wagmi"
 
-const savingsHistory = [
-  { id: "1", type: "deposit", amount: 500, date: "2025-01-15", interest: 0 },
-  { id: "2", type: "interest", amount: 8.22, date: "2025-01-10", interest: 8.22 },
-  { id: "3", type: "deposit", amount: 1000, date: "2025-01-05", interest: 0 },
-  { id: "4", type: "withdraw", amount: -200, date: "2025-01-01", interest: 0 },
-]
+// TODO: Fetch savings history from blockchain events
+const savingsHistory: any[] = []
 
 export function SavingsInterface() {
   const [showDepositModal, setShowDepositModal] = useState(false)
@@ -141,41 +137,48 @@ export function SavingsInterface() {
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {savingsHistory.map((item) => (
-                <div key={item.id} className="flex items-center justify-between py-3 border-b last:border-0">
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                        item.type === "withdraw"
-                          ? "bg-destructive/10"
-                          : item.type === "interest"
-                            ? "bg-accent/10"
-                            : "bg-primary/10"
-                      }`}
-                    >
-                      {item.type === "withdraw" ? (
-                        <ArrowUpRight className="h-5 w-5 text-destructive" />
-                      ) : item.type === "interest" ? (
-                        <TrendingUp className="h-5 w-5 text-accent" />
-                      ) : (
-                        <ArrowDownLeft className="h-5 w-5 text-primary" />
-                      )}
+            {savingsHistory.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No savings activity yet</p>
+                <p className="text-sm mt-2">Make a deposit to start earning interest</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {savingsHistory.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between py-3 border-b last:border-0">
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                          item.type === "withdraw"
+                            ? "bg-destructive/10"
+                            : item.type === "interest"
+                              ? "bg-accent/10"
+                              : "bg-primary/10"
+                        }`}
+                      >
+                        {item.type === "withdraw" ? (
+                          <ArrowUpRight className="h-5 w-5 text-destructive" />
+                        ) : item.type === "interest" ? (
+                          <TrendingUp className="h-5 w-5 text-accent" />
+                        ) : (
+                          <ArrowDownLeft className="h-5 w-5 text-primary" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-medium capitalize">{item.type}</div>
+                        <div className="text-sm text-muted-foreground">{item.date}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium capitalize">{item.type}</div>
-                      <div className="text-sm text-muted-foreground">{item.date}</div>
+                    <div className="text-right">
+                      <div className={`font-semibold ${item.type === "withdraw" ? "text-destructive" : "text-primary"}`}>
+                        {item.amount > 0 ? "+" : ""}${Math.abs(item.amount).toFixed(2)}
+                      </div>
+                      {item.interest > 0 && <div className="text-xs text-muted-foreground">Interest earned</div>}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className={`font-semibold ${item.type === "withdraw" ? "text-destructive" : "text-primary"}`}>
-                      {item.amount > 0 ? "+" : ""}${Math.abs(item.amount).toFixed(2)}
-                    </div>
-                    {item.interest > 0 && <div className="text-xs text-muted-foreground">Interest earned</div>}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

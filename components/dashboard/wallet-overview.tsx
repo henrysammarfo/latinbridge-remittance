@@ -13,10 +13,15 @@ export function WalletOverview() {
   const { useBalanceOf, useTotalBalance } = useRemittance()
   const { useBalance: useSavingsBalance } = useSavings()
 
-  // Get balances for different currencies
-  const usdBalance = useBalanceOf(Currency.USD)
-  const mxnBalance = useBalanceOf(Currency.MXN)
-  const brlBalance = useBalanceOf(Currency.BRL)
+  // Get balances for all 6 currencies
+  const balances = {
+    USD: useBalanceOf(Currency.USD),
+    MXN: useBalanceOf(Currency.MXN),
+    BRL: useBalanceOf(Currency.BRL),
+    ARS: useBalanceOf(Currency.ARS),
+    COP: useBalanceOf(Currency.COP),
+    GTQ: useBalanceOf(Currency.GTQ),
+  }
 
   // Get savings balance
   const savingsUSD = useSavingsBalance(Currency.USD)
@@ -33,14 +38,27 @@ export function WalletOverview() {
     )
   }
 
-  const totalAvailable = parseFloat(usdBalance.balance) +
-                        parseFloat(mxnBalance.balance) / 18.5 + // Convert to USD approx
-                        parseFloat(brlBalance.balance) / 5.0
+  // Approximate exchange rates for USD conversion
+  const exchangeRates = {
+    USD: 1,
+    MXN: 18.5,
+    BRL: 5.0,
+    ARS: 350.0,
+    COP: 4000.0,
+    GTQ: 7.8,
+  }
+
+  // Calculate total available in USD
+  const totalAvailable = Object.entries(balances).reduce((sum, [code, data]) => {
+    const balance = parseFloat(data.balance)
+    const rate = exchangeRates[code as keyof typeof exchangeRates]
+    return sum + (balance / rate)
+  }, 0)
 
   const totalSavings = parseFloat(savingsUSD.balance)
   const totalBalance = totalAvailable + totalSavings
 
-  const isLoading = usdBalance.isLoading || savingsUSD.isLoading
+  const isLoading = Object.values(balances).some(b => b.isLoading) || savingsUSD.isLoading
 
   return (
     <Card className="border-border/50">

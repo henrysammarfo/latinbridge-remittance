@@ -9,9 +9,30 @@ import { Search, Plus, User } from "lucide-react"
 import type { SendMoneyData } from "./send-money-flow"
 
 const savedRecipients = [
-  { id: "1", name: "Maria Garcia", email: "maria@example.com", phone: "+52 555 1234", country: "Mexico" },
-  { id: "2", name: "Carlos Rodriguez", email: "carlos@example.com", phone: "+55 11 9876", country: "Brazil" },
-  { id: "3", name: "Ana Silva", email: "ana@example.com", phone: "+54 11 5432", country: "Argentina" },
+  {
+    id: "1",
+    name: "Maria Garcia",
+    email: "maria@example.com",
+    phone: "+52 555 1234",
+    country: "Mexico",
+    walletAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1"
+  },
+  {
+    id: "2",
+    name: "Carlos Rodriguez",
+    email: "carlos@example.com",
+    phone: "+55 11 9876",
+    country: "Brazil",
+    walletAddress: "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4"
+  },
+  {
+    id: "3",
+    name: "Ana Silva",
+    email: "ana@example.com",
+    phone: "+54 11 5432",
+    country: "Argentina",
+    walletAddress: "0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2"
+  },
 ]
 
 interface RecipientStepProps {
@@ -29,6 +50,7 @@ export function RecipientStep({ data, updateData, onNext }: RecipientStepProps) 
     email: "",
     phone: "",
     country: "",
+    walletAddress: "",
   })
 
   const filteredRecipients = savedRecipients.filter((r) => r.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -133,6 +155,16 @@ export function RecipientStep({ data, updateData, onNext }: RecipientStepProps) 
                 value={newRecipient.country}
                 onChange={(e) => setNewRecipient({ ...newRecipient, country: e.target.value })}
                 placeholder="Mexico"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="walletAddress">Wallet Address</Label>
+              <Input
+                id="walletAddress"
+                value={newRecipient.walletAddress}
+                onChange={(e) => setNewRecipient({ ...newRecipient, walletAddress: e.target.value })}
+                placeholder="0x..."
+                required
               />
             </div>
             <Button variant="outline" className="w-full bg-transparent" onClick={() => setShowNewRecipient(false)}>
