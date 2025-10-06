@@ -32,9 +32,7 @@ export const polkadotPaseo = defineChain({
 export const wagmiConfig = createConfig({
   chains: [polkadotPaseo],
   connectors: [
-    injected({
-      target: 'metaMask',
-    }),
+    injected(), // Supports MetaMask, Coinbase, Brave, Trust Wallet, etc.
   ],
   transports: {
     [polkadotPaseo.id]: http(),
