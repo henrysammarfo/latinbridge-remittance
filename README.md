@@ -10,36 +10,38 @@ LatinBridge is a blockchain-powered remittance platform that enables fast, low-c
 - **Low Fees**: 0.5% transaction fee (vs 6-8% traditional)
 - **Instant Transfers**: Blockchain-based settlement
 - **DeFi Features**: 5% APY savings, microloans, local payment network integration
-- **KYC Compliance**: Didit integration for identity verification
+- **KYC Compliance**: Multi-tier verification system
 
 ## Technology Stack
 
 ### Blockchain
 - **Network**: Polkadot Paseo Asset Hub Testnet (EVM-compatible)
 - **Chain ID**: 420420422
-- **Smart Contracts**: Solidity 0.8.28 (custom implementations, <100KB bytecode)
+- **Smart Contracts**: Solidity 0.8.28
+- **Deployed Contracts**: 6 core contracts (see DEPLOYMENT_COMPLETE.md)
 
-### Backend
+### Frontend
 - **Framework**: Next.js 15 with TypeScript
-- **Blockchain Library**: ethers.js v6
-- **Authentication**: MetaMask wallet-based + JWT
+- **Web3 Libraries**: Wagmi v2, Viem v2, ethers.js v6
+- **Authentication**: SIWE (Sign-In With Ethereum)
+- **UI**: Tailwind CSS + shadcn/ui
 - **APIs**: ExchangeRate-API, Didit KYC, Stripe
 
 ### Smart Contracts
 
-1. **RemittanceVault.sol** - Core remittance with multi-currency vault
-2. **UserRegistry.sol** - KYC levels (Basic $1K / Enhanced $10K / Premium $50K)
-3. **ExchangeRateOracle.sol** - Live rate management with staleness protection
-4. **SavingsPool.sol** - 5% APY yield farming
-5. **MicroloanManager.sol** - 5-15% interest credit-based lending
-6. **PaymentNetworks.sol** - PIX/SPEI/PSE/CoDi/ACH integration
+1. **RemittanceVault** - Multi-currency vault with cross-border transfers
+2. **UserRegistry** - KYC levels and user profiles
+3. **ExchangeRateOracle** - Real-time exchange rates
+4. **SavingsPool** - 5% APY yield farming
+5. **MicroloanManager** - Credit-based lending (5-15% interest)
+6. **PaymentNetworks** - PIX/SPEI/PSE/CoDi/ACH integration
 
 ## Quick Start
 
 ### Prerequisites
-- Node.js 22+ and npm 10+
+- Node.js 18+ and npm 9+
 - MetaMask wallet
-- PAS testnet tokens (from Polkadot faucet)
+- PAS testnet tokens
 
 ### Installation
 
@@ -47,104 +49,105 @@ LatinBridge is a blockchain-powered remittance platform that enables fast, low-c
 # Install dependencies
 npm install --legacy-peer-deps
 
-# Compile contracts
-npx hardhat compile
-
-# Deploy to testnet
-npx hardhat run scripts/deploy.js --network passetHub
-
-# Start dev server
+# Start development server
 npm run dev
 ```
 
 ### Configuration
 
-Create `.env.local` with required keys (see `.env.local.example`)
+Environment variables are already configured in `.env.local` with deployed contract addresses.
+
+## Deployed Contracts (Polkadot Paseo)
+
+| Contract | Address |
+|----------|---------|
+| UserRegistry | 0xfba199c705761D98aD1cD98c34C0d544e39c1984 |
+| ExchangeRateOracle | 0x8c73284b55cb55EB46Dd42617bA6213037e602e9 |
+| RemittanceVault | 0x24d591Aa216E5466D5381139bc8feC2A91e707DB |
+| SavingsPool | 0xfD2CFC86e06c54d1ffe9B503391d91452a8Fd02D |
+| MicroloanManager | 0x2ABa80F8931d52DEE8e6732d213eabe795535660 |
+| PaymentNetworks | 0x5D3235c4eB39f5c3729e75932D62E40f77D8e70f |
+
+Block Explorer: https://blockscout-passet-hub.parity-testnet.parity.io
 
 ## Features
 
 ### Remittance
 - Send money across borders with real-time currency conversion
-- Track transaction history on-chain
+- Transaction tracking on-chain with block explorer integration
+- Multi-currency support (6 currencies)
 - 0.5% flat fee structure
 
 ### Savings
 - Deposit funds to earn 5% APY
-- Set savings goals
-- Compound interest automatically
+- Withdraw anytime with accrued interest
+- Real-time balance updates from blockchain
 
 ### Microloans
-- Apply for loans based on credit score
-- Interest rates from 5-15%
-- Flexible repayment terms (up to 365 days)
+- Apply for loans based on KYC level and credit score
+- Interest rates from 5-15% based on creditworthiness
+- Flexible repayment terms
+- Collateral support
 
-### Local Payment Networks
-- **Brazil**: PIX integration
-- **Mexico**: SPEI and CoDi
-- **Colombia**: PSE
-- **Guatemala/Central America**: ACH
+### KYC Verification
+- **Tier 1 (Basic)**: $1,000 daily / $5,000 monthly limits
+- **Tier 2 (Enhanced)**: $10,000 daily / $50,000 monthly limits
+- **Tier 3 (Premium)**: $50,000 daily / $250,000 monthly limits
 
-## API Endpoints
+## Testing
 
-```
-POST   /api/auth/connect       - Initialize wallet connection
-POST   /api/auth/verify        - Verify signature and get JWT
-GET    /api/rates/current      - Get exchange rates
-POST   /api/remittance/send    - Send cross-border transfer
-GET    /api/remittance/history - Get transaction history
-GET    /api/savings            - Get savings account info
-POST   /api/loans/apply        - Apply for microloan
-```
-
-See [DEPLOYMENT.md](DEPLOYMENT.md) for full deployment guide.
+Visit `/test` page after starting the development server to test all features:
+- Wallet connection
+- Contract interactions
+- API integrations
+- Transaction flows
 
 ## Architecture
 
 ```
-┌─────────────┐         ┌──────────────────┐
-│   Frontend  │────────▶│   Next.js API    │
-│   (v0.app)  │         │     Routes       │
-└─────────────┘         └──────────────────┘
-                               │
-                ┌──────────────┼──────────────┐
-                │              │              │
-        ┌───────▼─────┐  ┌────▼─────┐  ┌────▼─────┐
-        │   Polkadot  │  │  Didit   │  │  Stripe  │
-        │   Paseo     │  │   KYC    │  │ Payment  │
-        │  Contracts  │  │          │  │          │
-        └─────────────┘  └──────────┘  └──────────┘
+Frontend (Next.js)
+       |
+       v
+  Web3 Provider (Wagmi + Viem)
+       |
+       v
+  Smart Contracts (Polkadot Paseo)
+       |
+       +-- UserRegistry
+       +-- RemittanceVault
+       +-- SavingsPool
+       +-- MicroloanManager
+       +-- ExchangeRateOracle
+       +-- PaymentNetworks
 ```
 
-## Smart Contract Addresses
+## Documentation
 
-*Will be populated after deployment to testnet*
+- **API Status**: See API_FINAL_STATUS.md
+- **Deployment**: See DEPLOYMENT_COMPLETE.md
+- **Integration**: See INTEGRATION_COMPLETE.md
+- **Contract Details**: See FINAL_STATUS.md
 
-See `deployments/passetHub.json` for deployed contract addresses.
+## Security
+
+- SIWE authentication (EIP-4361 standard)
+- KYC-based transaction limits
+- Rate staleness protection in oracle
+- Reentrancy guards on all state-changing functions
+- Multi-signature wallet support
 
 ## Development
 
 ```bash
-# Run tests
-npm test
-
-# Lint code
+# Run linter
 npm run lint
 
 # Build for production
 npm run build
+
+# Run tests
+npm test
 ```
-
-## Security
-
-- Custom reentrancy guards on all state-changing functions
-- KYC-based transaction limits
-- Rate staleness protection in oracle
-- Wallet-based authentication (no passwords)
-- AML compliance through Didit integration
-
-## Contributing
-
-This is a hackathon project for LATIN HACK 2025.
 
 ## License
 

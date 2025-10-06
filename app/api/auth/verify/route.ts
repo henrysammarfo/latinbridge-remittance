@@ -1,84 +1,75 @@
 /**
- * POST /api/auth/verify
- * Verify wallet signature and issue JWT token
+ * SIWE signature verification endpoint
  */
-import { NextRequest, NextResponse } from 'next/server';
-import { verifySignature, generateToken, generateAuthMessage } from '@/lib/auth/jwt';
-import { isAddress } from '@/lib/blockchain/contracts';
+import { NextRequest, NextResponse } from 'next/server'
+import { SiweMessage } from 'siwe'
+import { generateToken } from '@/lib/auth/jwt'
+import { getNonce, deleteNonce } from '@/lib/auth/nonce-storage'
 
-// This should match the nonceStore in connect/route.ts
-// In production, use a shared store like Redis
-const nonceStore = new Map<string, { nonce: string; timestamp: number }>();
-
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
-    const { address, signature } = body;
+    const { message, signature } = await request.json()
 
-    // Validate inputs
-    if (!address || !isAddress(address)) {
+    if (!message || !signature) {
       return NextResponse.json(
-        { error: 'Invalid wallet address' },
+        { error: 'Message and signature are required' },
         { status: 400 }
-      );
+      )
     }
 
-    if (!signature) {
+    // Verify SIWE message
+    const siweMessage = new SiweMessage(message)
+
+    try {
+      // Verify the signature
+      const fields = await siweMessage.verify({ signature })
+
+      // Get stored nonce
+      const storedNonce = getNonce(fields.data.address)
+
+      if (!storedNonce) {
+        return NextResponse.json(
+          { error: 'Nonce not found or expired' },
+          { status: 401 }
+        )
+      }
+
+      if (storedNonce !== fields.data.nonce) {
+        return NextResponse.json(
+          { error: 'Invalid nonce' },
+          { status: 401 }
+        )
+      }
+
+      // Delete used nonce
+      deleteNonce(fields.data.address)
+
+      // Check if user is registered on-chain
+      // For now, we'll skip this and handle registration on first interaction
+      // In a full implementation, you would:
+      // 1. Check UserRegistry contract for registration
+      // 2. Auto-register if needed (using backend wallet)
+
+      // Generate JWT token
+      const token = await generateToken(fields.data.address)
+
+      return NextResponse.json({
+        success: true,
+        token,
+        address: fields.data.address,
+      })
+    } catch (error) {
+      console.error('SIWE verification failed:', error)
       return NextResponse.json(
-        { error: 'Signature required' },
-        { status: 400 }
-      );
-    }
-
-    // Get stored nonce
-    const stored = nonceStore.get(address.toLowerCase());
-
-    if (!stored) {
-      return NextResponse.json(
-        { error: 'No nonce found. Please reconnect.' },
-        { status: 400 }
-      );
-    }
-
-    // Check nonce age (5 minutes max)
-    const now = Date.now();
-    if (now - stored.timestamp > 5 * 60 * 1000) {
-      nonceStore.delete(address.toLowerCase());
-      return NextResponse.json(
-        { error: 'Nonce expired. Please reconnect.' },
-        { status: 400 }
-      );
-    }
-
-    // Recreate the message
-    const message = generateAuthMessage(address, stored.nonce);
-
-    // Verify signature
-    const isValid = verifySignature(message, signature, address);
-
-    if (!isValid) {
-      return NextResponse.json(
-        { error: 'Invalid signature' },
+        { error: 'Signature verification failed' },
         { status: 401 }
-      );
+      )
     }
-
-    // Delete used nonce
-    nonceStore.delete(address.toLowerCase());
-
-    // Generate JWT token
-    const token = await generateToken(address);
-
-    return NextResponse.json({
-      success: true,
-      token,
-      address,
-    });
   } catch (error) {
-    console.error('Verification error:', error);
+    console.error('Verification error:', error)
     return NextResponse.json(
-      { error: 'Authentication failed' },
+      { error: 'Verification failed' },
       { status: 500 }
-    );
+    )
   }
 }
