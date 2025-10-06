@@ -75,16 +75,11 @@ export function ExchangeRates() {
   const exchangeRatesData = currencyPairs.map(pair => ({
     ...pair,
     rate: calculateCrossRate(pair.from, pair.to),
-    change: Math.random() * 4 - 2, // Mock change percentage
-    trend: Math.random() > 0.5 ? "up" : "down",
+    change: 0, // Real-time rates, no historical data yet
+    trend: "neutral" as const,
     lastUpdate: "Live"
   }))
 
-  // Get best rates (highest positive change)
-  const bestRates = [...exchangeRatesData]
-    .filter(r => r.change > 0)
-    .sort((a, b) => b.change - a.change)
-    .slice(0, 2)
 
   if (isLoading) {
     return (
@@ -142,19 +137,6 @@ export function ExchangeRates() {
 
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <div
-                        className={`flex items-center gap-1 font-medium ${rate.trend === "up" ? "text-primary" : "text-destructive"}`}
-                      >
-                        {rate.trend === "up" ? (
-                          <TrendingUp className="h-4 w-4" />
-                        ) : (
-                          <TrendingDown className="h-4 w-4" />
-                        )}
-                        <span>
-                          {rate.change > 0 ? "+" : ""}
-                          {rate.change.toFixed(2)}%
-                        </span>
-                      </div>
                       <div className="text-xs text-muted-foreground flex items-center gap-1">
                         <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                         {rate.lastUpdate}
@@ -185,57 +167,33 @@ export function ExchangeRates() {
           </CardContent>
         </Card>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle>Best Rates Today</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {bestRates.map((rate, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
-                    <div>
-                      <div className="font-semibold">{rate.from}/{rate.to}</div>
-                      <div className="text-sm text-muted-foreground">{rate.name}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-primary">{rate.rate.toFixed(4)}</div>
-                      <div className="text-xs text-primary">+{rate.change.toFixed(2)}%</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle>Rate Alerts</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-lg border">
-                  <div>
-                    <div className="font-semibold">USD/BRL</div>
-                    <div className="text-sm text-muted-foreground">Alert at 5.30</div>
-                  </div>
-                  <Badge variant="secondary">Active</Badge>
+        <Card className="border-border/50">
+          <CardHeader>
+            <CardTitle>Rate Alerts</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div>
+                  <div className="font-semibold">USD/BRL</div>
+                  <div className="text-sm text-muted-foreground">Alert at 5.30</div>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg border">
-                  <div>
-                    <div className="font-semibold">MXN/COP</div>
-                    <div className="text-sm text-muted-foreground">Alert at 225.00</div>
-                  </div>
-                  <Badge variant="secondary">Active</Badge>
-                </div>
+                <Badge variant="secondary">Active</Badge>
               </div>
-              <Button variant="outline" className="w-full mt-4 bg-transparent" onClick={() => setShowAlertModal(true)}>
-                <Bell className="mr-2 h-4 w-4" />
-                Create New Alert
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div>
+                  <div className="font-semibold">MXN/COP</div>
+                  <div className="text-sm text-muted-foreground">Alert at 225.00</div>
+                </div>
+                <Badge variant="secondary">Active</Badge>
+              </div>
+            </div>
+            <Button variant="outline" className="w-full mt-4 bg-transparent" onClick={() => setShowAlertModal(true)}>
+              <Bell className="mr-2 h-4 w-4" />
+              Create New Alert
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       <RateAlertModal
