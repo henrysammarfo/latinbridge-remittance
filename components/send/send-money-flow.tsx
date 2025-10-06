@@ -18,6 +18,7 @@ export interface SendMoneyData {
     email: string
     phone: string
     country: string
+    walletAddress: string
   } | null
   amount: string
   fromCurrency: string

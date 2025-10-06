@@ -108,6 +108,16 @@ export function useUserRegistry() {
     refetchRegistered()
   }
 
+  /**
+   * Get KYC status as a number (0=None, 1=Basic, 2=Enhanced, 3=Premium)
+   */
+  const getKYCStatus = async (): Promise<number> => {
+    if (!address || !kycStatus) return 0
+    // kycStatus is a tuple: [isVerified, level, limit]
+    const level = kycStatus[1]
+    return Number(level)
+  }
+
   return {
     // Data
     profile: profile as any,
@@ -123,6 +133,7 @@ export function useUserRegistry() {
     registerUser,
     updateProfile,
     refetchAll,
+    getKYCStatus,
   }
 }
 

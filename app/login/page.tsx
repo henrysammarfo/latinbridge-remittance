@@ -7,43 +7,32 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Wallet, AlertCircle, Loader2 } from 'lucide-react'
 import { useAccount, useConnect } from 'wagmi'
-import { useAuth } from '@/lib/web3/hooks/useAuth'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { isConnected } = useAccount()
-  const { connect, connectors, isPending } = useConnect()
-  const { signIn, isLoading, error, isAuthenticated } = useAuth()
+  const { isConnected, address } = useAccount()
+  const { connect, connectors, isPending, error: connectError } = useConnect()
 
-  // Check if MetaMask is installed
-  const isMetaMaskInstalled = typeof window !== 'undefined' && window.ethereum?.isMetaMask
-
+  // Redirect to dashboard when wallet is connected
   useEffect(() => {
-    // Redirect if already authenticated
-    if (isAuthenticated) {
+    if (isConnected && address) {
       router.push('/dashboard')
     }
-  }, [isAuthenticated, router])
+  }, [isConnected, address, router])
 
   const handleConnect = async () => {
     try {
-      // Connect wallet if not connected
-      if (!isConnected) {
-        const injectedConnector = connectors.find(c => c.id === 'injected')
-        if (injectedConnector) {
-          await connect({ connector: injectedConnector })
-        }
-      }
-
-      // Sign in with SIWE
-      const token = await signIn()
-      if (token) {
-        router.push('/dashboard')
+      const injectedConnector = connectors.find(c => c.id === 'injected')
+      if (injectedConnector) {
+        await connect({ connector: injectedConnector })
       }
     } catch (err) {
       console.error('Connection error:', err)
     }
   }
+
+  // Check if any injected wallet is available
+  const hasWallet = typeof window !== 'undefined' && window.ethereum
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -60,11 +49,11 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {!isMetaMaskInstalled && (
+          {!hasWallet && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                MetaMask is not installed. Please install MetaMask to continue.
+                No wallet detected. Please install MetaMask, Coinbase Wallet, or another Web3 wallet.
                 <a
                   href="https://metamask.io/download/"
                   target="_blank"
@@ -77,10 +66,10 @@ export default function LoginPage() {
             </Alert>
           )}
 
-          {error && (
+          {connectError && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{connectError.message}</AlertDescription>
             </Alert>
           )}
 
@@ -88,16 +77,16 @@ export default function LoginPage() {
             onClick={handleConnect}
             className="w-full"
             size="lg"
-            disabled={!isMetaMaskInstalled || isLoading || isPending}
+            disabled={!hasWallet || isPending || isConnected}
           >
-            {(isLoading || isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isConnected ? 'Sign Message to Authenticate' : 'Connect MetaMask'}
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isConnected ? 'Connected - Redirecting...' : 'Connect Wallet'}
           </Button>
 
           <div className="text-center text-sm text-muted-foreground space-y-2">
             <p>By connecting your wallet, you agree to our Terms of Service and Privacy Policy.</p>
             <p className="text-xs">
-              Your wallet will be used for secure authentication. No password required!
+              Supports MetaMask, Coinbase Wallet, Trust Wallet, Brave Wallet, and more!
             </p>
           </div>
 

@@ -35,36 +35,14 @@ export function TransactionHistory() {
       try {
         setIsLoading(true)
 
-        // In production, you would:
-        // 1. Query contract events using publicClient.getLogs()
-        // 2. Filter by user address
-        // 3. Parse event data
-        // 4. Combine events from all contracts
+        // TODO: Query contract events using publicClient.getLogs()
+        // 1. Query RemittanceSent, RemittanceReceived events from RemittanceVault
+        // 2. Query Deposit, Withdrawal events from SavingsPool
+        // 3. Query LoanRequested, LoanRepaid events from MicroloanManager
+        // 4. Filter by user address and combine events
 
-        // For demo, create sample transactions
-        // This would be replaced with actual event queries
-        const sampleTransactions: Transaction[] = [
-          {
-            hash: '0x1234...5678',
-            type: 'send',
-            amount: '100',
-            currency: 'USD',
-            timestamp: Date.now() - 3600000,
-            from: address,
-            to: '0xabcd...efgh'
-          },
-          {
-            hash: '0x8765...4321',
-            type: 'receive',
-            amount: '50',
-            currency: 'MXN',
-            timestamp: Date.now() - 7200000,
-            from: '0xijkl...mnop',
-            to: address
-          }
-        ]
-
-        setTransactions(sampleTransactions)
+        // For now, show empty state until real transactions occur
+        setTransactions([])
       } catch (error) {
         console.error('Error fetching transactions:', error)
         setTransactions([])
