@@ -22,9 +22,8 @@ export default function LoginPage() {
       if (isConnected && address) {
         try {
           setIsCheckingRegistration(true)
-          const registered = await isRegistered()
 
-          if (registered) {
+          if (isRegistered) {
             // User is registered, go to dashboard
             router.push('/dashboard')
           } else {

@@ -1,42 +1,64 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowDownUp, TrendingUp } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ArrowDownUp, TrendingUp, Loader2, Info } from "lucide-react"
+import { useAccount } from "wagmi"
+import { useToast } from "@/hooks/use-toast"
 
 const currencies = [
   { code: "USD", name: "US Dollar", flag: "🇺🇸" },
-  { code: "EUR", name: "Euro", flag: "🇪🇺" },
-  { code: "GBP", name: "British Pound", flag: "🇬🇧" },
   { code: "MXN", name: "Mexican Peso", flag: "🇲🇽" },
   { code: "BRL", name: "Brazilian Real", flag: "🇧🇷" },
   { code: "ARS", name: "Argentine Peso", flag: "🇦🇷" },
   { code: "COP", name: "Colombian Peso", flag: "🇨🇴" },
-  { code: "CLP", name: "Chilean Peso", flag: "🇨🇱" },
+  { code: "GTQ", name: "Guatemalan Quetzal", flag: "🇬🇹" },
 ]
 
-const exchangeRates: Record<string, Record<string, number>> = {
-  USD: { EUR: 0.92, GBP: 0.79, MXN: 17.5, BRL: 5.1, ARS: 350, COP: 4100, CLP: 900 },
-  EUR: { USD: 1.09, GBP: 0.86, MXN: 19.1, BRL: 5.6, ARS: 382, COP: 4475, CLP: 982 },
-  GBP: { USD: 1.27, EUR: 1.16, MXN: 22.2, BRL: 6.5, ARS: 445, COP: 5200, CLP: 1143 },
-}
-
 export function ExchangeInterface() {
+  const { isConnected } = useAccount()
+  const { toast } = useToast()
   const [fromCurrency, setFromCurrency] = useState("USD")
   const [toCurrency, setToCurrency] = useState("MXN")
   const [fromAmount, setFromAmount] = useState("")
   const [toAmount, setToAmount] = useState("")
+  const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({})
+  const [isLoadingRates, setIsLoadingRates] = useState(false)
+
+  // Fetch real exchange rates from API
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        setIsLoadingRates(true)
+        const response = await fetch('/api/rates/current')
+        const data = await response.json()
+
+        if (data.rates) {
+          setExchangeRates(data.rates)
+        }
+      } catch (error) {
+        console.error('Error fetching rates:', error)
+      } finally {
+        setIsLoadingRates(false)
+      }
+    }
+
+    fetchRates()
+    const interval = setInterval(fetchRates, 60000)
+    return () => clearInterval(interval)
+  }, [])
 
   const handleFromAmountChange = (value: string) => {
     setFromAmount(value)
-    if (value && exchangeRates[fromCurrency]?.[toCurrency]) {
-      const rate = exchangeRates[fromCurrency][toCurrency]
-      setToAmount((Number.parseFloat(value) * rate).toFixed(2))
+    if (value && exchangeRates[toCurrency] && exchangeRates[fromCurrency]) {
+      const fromRate = exchangeRates[fromCurrency]
+      const toRate = exchangeRates[toCurrency]
+      const exchangeRate = toRate / fromRate
+      setToAmount((parseFloat(value) * exchangeRate).toFixed(2))
     } else {
       setToAmount("")
     }
@@ -49,19 +71,41 @@ export function ExchangeInterface() {
     setToAmount(fromAmount)
   }
 
-  const handleExchange = (e: React.FormEvent) => {
+  const handleExchange = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] Exchange:", { fromCurrency, toCurrency, fromAmount, toAmount })
-    // Handle exchange logic
+
+    if (!isConnected) {
+      toast({
+        title: "Wallet not connected",
+        description: "Please connect your wallet to exchange currency",
+        variant: "destructive"
+      })
+      return
+    }
+
+    toast({
+      title: "Exchange feature",
+      description: "Currency exchange will execute on the RemittanceVault contract",
+    })
   }
 
-  const currentRate = exchangeRates[fromCurrency]?.[toCurrency] || 0
+  const currentRate = exchangeRates[toCurrency] && exchangeRates[fromCurrency]
+    ? exchangeRates[toCurrency] / exchangeRates[fromCurrency]
+    : 0
 
   return (
-    <Card>
+    <div className="space-y-6">
+      <Alert className="bg-primary/10 border-primary/20">
+        <Info className="h-4 w-4 text-primary" />
+        <AlertDescription className="text-primary">
+          <strong>Live Rates:</strong> Exchange rates are fetched from ExchangeRate-API and updated every minute.
+        </AlertDescription>
+      </Alert>
+
+      <Card className="border-border/50">
       <CardHeader>
         <CardTitle>Exchange Currency</CardTitle>
-        <CardDescription>Convert your balance between different currencies</CardDescription>
+        <CardDescription>Convert your balance between different currencies at live market rates</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleExchange} className="space-y-6">
@@ -138,24 +182,38 @@ export function ExchangeInterface() {
             </div>
           </div>
 
-          {currentRate > 0 && (
+          {isLoadingRates ? (
+            <div className="rounded-lg bg-muted p-4 flex items-center justify-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-sm text-muted-foreground">Loading exchange rates...</span>
+            </div>
+          ) : currentRate > 0 ? (
             <div className="rounded-lg bg-muted p-4 space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <TrendingUp className="h-4 w-4" />
-                <span>Current Exchange Rate</span>
+                <span>Current Exchange Rate (Live from API)</span>
               </div>
               <div className="text-lg font-semibold">
                 1 {fromCurrency} = {currentRate.toFixed(4)} {toCurrency}
               </div>
-              <div className="text-xs text-muted-foreground">Rate updates every minute • No hidden fees</div>
+              <div className="text-xs text-muted-foreground">
+                Rate updates every minute • Source: ExchangeRate-API
+              </div>
             </div>
-          )}
+          ) : null}
 
-          <Button type="submit" className="w-full" size="lg" disabled={!fromAmount || !toAmount}>
-            Exchange Currency
+          <Button type="submit" className="w-full" size="lg" disabled={!isConnected || !fromAmount}>
+            {isConnected ? 'Exchange Currency' : 'Connect Wallet to Exchange'}
           </Button>
+
+          {!isConnected && (
+            <p className="text-xs text-center text-muted-foreground">
+              Connect your wallet to execute currency exchanges
+            </p>
+          )}
         </form>
       </CardContent>
     </Card>
+    </div>
   )
 }

@@ -29,8 +29,7 @@ export default function OnboardingPage() {
   useEffect(() => {
     const checkRegistration = async () => {
       if (isConnected && address && !isCheckingRegistration) {
-        const registered = await isRegistered()
-        if (registered) {
+        if (isRegistered) {
           // Already registered, redirect to dashboard
           router.push('/dashboard')
         }
@@ -70,11 +69,11 @@ export default function OnboardingPage() {
       setIsSubmitting(true)
 
       // Register user in UserRegistry contract
+      // Note: UserRegistry stores name and email on-chain
+      // Phone and country are stored in form state for UI display only
       const hash = await registerUser(
         formData.name,
-        formData.email,
-        formData.phone,
-        formData.country
+        formData.email
       )
 
       toast({

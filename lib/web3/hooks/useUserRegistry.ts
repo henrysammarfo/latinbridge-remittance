@@ -114,7 +114,8 @@ export function useUserRegistry() {
   const getKYCStatus = async (): Promise<number> => {
     if (!address || !kycStatus) return 0
     // kycStatus is a tuple: [isVerified, level, limit]
-    const level = kycStatus[1]
+    const statusArray = kycStatus as unknown as [boolean, number, bigint]
+    const level = statusArray[1]
     return Number(level)
   }
 

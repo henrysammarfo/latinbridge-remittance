@@ -8,10 +8,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Search, Plus, User } from "lucide-react"
 import type { SendMoneyData } from "./send-money-flow"
 
+// Example recipients for testing - In production, fetch from UserRegistry contract
 const savedRecipients = [
   {
     id: "1",
-    name: "Maria Garcia",
+    name: "Maria Garcia (Example)",
     email: "maria@example.com",
     phone: "+52 555 1234",
     country: "Mexico",
@@ -19,7 +20,7 @@ const savedRecipients = [
   },
   {
     id: "2",
-    name: "Carlos Rodriguez",
+    name: "Carlos Rodriguez (Example)",
     email: "carlos@example.com",
     phone: "+55 11 9876",
     country: "Brazil",
@@ -27,7 +28,7 @@ const savedRecipients = [
   },
   {
     id: "3",
-    name: "Ana Silva",
+    name: "Ana Silva (Example)",
     email: "ana@example.com",
     phone: "+54 11 5432",
     country: "Argentina",
