@@ -2,12 +2,12 @@
  * Contract interaction utilities
  */
 import { ethers } from 'ethers';
-import RemittanceVaultABI from '../../artifacts/contracts/RemittanceVault.sol/RemittanceVault.json';
-import UserRegistryABI from '../../artifacts/contracts/UserRegistry.sol/UserRegistry.json';
-import ExchangeRateOracleABI from '../../artifacts/contracts/ExchangeRateOracle.sol/ExchangeRateOracle.json';
-import SavingsPoolABI from '../../artifacts/contracts/SavingsPool.sol/SavingsPool.json';
-import MicroloanManagerABI from '../../artifacts/contracts/MicroloanManager.sol/MicroloanManager.json';
-import PaymentNetworksABI from '../../artifacts/contracts/PaymentNetworks.sol/PaymentNetworks.json';
+import RemittanceVaultABI from './abis/RemittanceVault.json';
+import UserRegistryABI from './abis/UserRegistry.json';
+import ExchangeRateOracleABI from './abis/ExchangeRateOracle.json';
+import SavingsPoolABI from './abis/SavingsPool.json';
+import MicroloanManagerABI from './abis/MicroloanManager.json';
+import PaymentNetworksABI from './abis/PaymentNetworks.json';
 
 // Contract addresses from environment
 export const CONTRACT_ADDRESSES = {
@@ -40,7 +40,7 @@ export function getRemittanceVault(signerOrProvider?: ethers.Signer | ethers.Pro
   const addressOrSigner = signerOrProvider || getProvider();
   return new ethers.Contract(
     CONTRACT_ADDRESSES.RemittanceVault,
-    RemittanceVaultABI.abi,
+    RemittanceVaultABI,
     addressOrSigner
   );
 }
@@ -49,7 +49,7 @@ export function getUserRegistry(signerOrProvider?: ethers.Signer | ethers.Provid
   const addressOrSigner = signerOrProvider || getProvider();
   return new ethers.Contract(
     CONTRACT_ADDRESSES.UserRegistry,
-    UserRegistryABI.abi,
+    UserRegistryABI,
     addressOrSigner
   );
 }
@@ -58,7 +58,7 @@ export function getExchangeRateOracle(signerOrProvider?: ethers.Signer | ethers.
   const addressOrSigner = signerOrProvider || getProvider();
   return new ethers.Contract(
     CONTRACT_ADDRESSES.ExchangeRateOracle,
-    ExchangeRateOracleABI.abi,
+    ExchangeRateOracleABI,
     addressOrSigner
   );
 }
@@ -67,7 +67,7 @@ export function getSavingsPool(signerOrProvider?: ethers.Signer | ethers.Provide
   const addressOrSigner = signerOrProvider || getProvider();
   return new ethers.Contract(
     CONTRACT_ADDRESSES.SavingsPool,
-    SavingsPoolABI.abi,
+    SavingsPoolABI,
     addressOrSigner
   );
 }
@@ -76,7 +76,7 @@ export function getMicroloanManager(signerOrProvider?: ethers.Signer | ethers.Pr
   const addressOrSigner = signerOrProvider || getProvider();
   return new ethers.Contract(
     CONTRACT_ADDRESSES.MicroloanManager,
-    MicroloanManagerABI.abi,
+    MicroloanManagerABI,
     addressOrSigner
   );
 }
@@ -85,7 +85,7 @@ export function getPaymentNetworks(signerOrProvider?: ethers.Signer | ethers.Pro
   const addressOrSigner = signerOrProvider || getProvider();
   return new ethers.Contract(
     CONTRACT_ADDRESSES.PaymentNetworks,
-    PaymentNetworksABI.abi,
+    PaymentNetworksABI,
     addressOrSigner
   );
 }

@@ -58,13 +58,13 @@ export function LoanApplicationModal({ open, onClose, maxAmount, interestRate, o
 
       const currencyEnum = getCurrencyEnum(currency)
       const termMonths = term[0]
-      const collateralAmount = collateral || "0"
+      const durationDays = termMonths * 30 // Convert months to days
+      // Note: Collateral is not yet implemented in the smart contract
 
       await applyForLoan(
         amount,
         currencyEnum,
-        termMonths,
-        collateralAmount
+        durationDays
       )
 
       toast({

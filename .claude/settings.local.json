@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(timeout 10 bash -c \"until curl -s http://localhost:3000 > /dev/null; do sleep 1; done\")",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: add user onboarding and fix QR code generation\n\n- Create onboarding page with profile setup form\n- Update login flow to check registration status and redirect to onboarding\n- Fix QR code generation with real wallet address using qrcode.react\n- Add download and share functionality for QR codes\n- Create comprehensive documentation for savings APY and loan funding\n\nFeatures:\n- Onboarding flow: Connect wallet → Fill profile → Dashboard\n- Profile stored in UserRegistry smart contract\n- QR code now displays actual wallet address with payment details\n- Savings and loans funding explanation document\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(npm run build:*)",
+      "Bash(timeout 420 npm run build)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

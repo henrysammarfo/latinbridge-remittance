@@ -13,56 +13,14 @@ import { useToast } from "@/hooks/use-toast"
 export function LoansInterface() {
   const { toast } = useToast()
   const { address, isConnected } = useAccount()
-  const { checkEligibility, getActiveLoan, repayLoan } = useLoans()
+  const { isEligible, useActiveLoan, repayLoan, useInterestRate } = useLoans()
 
   const [showApplicationModal, setShowApplicationModal] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [eligibility, setEligibility] = useState({
-    isEligible: false,
-    maxAmount: "0",
-    interestRate: 0
-  })
-  const [activeLoan, setActiveLoan] = useState<any>(null)
   const [isRepaying, setIsRepaying] = useState(false)
 
-  // Fetch loan data from blockchain
-  useEffect(() => {
-    const fetchLoanData = async () => {
-      if (!isConnected || !address) {
-        setIsLoading(false)
-        return
-      }
-
-      try {
-        setIsLoading(true)
-
-        // Check eligibility
-        const { eligible, maxAmount, interestRate } = await checkEligibility()
-        setEligibility({
-          isEligible: eligible,
-          maxAmount: maxAmount,
-          interestRate: interestRate
-        })
-
-        // Get active loan if any
-        const loan = await getActiveLoan()
-        if (loan && loan.isActive) {
-          setActiveLoan(loan)
-        }
-      } catch (error) {
-        console.error("Error fetching loan data:", error)
-        toast({
-          title: "Error loading loan data",
-          description: "Could not fetch loan information from blockchain",
-          variant: "destructive"
-        })
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchLoanData()
-  }, [isConnected, address])
+  // Use hooks to fetch loan data from blockchain
+  const { loan: activeLoan, isLoading, refetch: refetchLoan } = useActiveLoan()
+  const { rate: interestRate } = useInterestRate(0) // Currency.USD
 
   const handleRepayment = async (loanId: number) => {
     if (!isConnected) {
@@ -82,7 +40,7 @@ export function LoansInterface() {
         description: "Please confirm the transaction in your wallet"
       })
 
-      await repayLoan(loanId)
+      await repayLoan(activeLoan?.amount || "0")
 
       toast({
         title: "Payment successful!",
@@ -90,12 +48,7 @@ export function LoansInterface() {
       })
 
       // Refresh active loan data
-      const loan = await getActiveLoan()
-      if (loan && loan.isActive) {
-        setActiveLoan(loan)
-      } else {
-        setActiveLoan(null)
-      }
+      await refetchLoan()
     } catch (error: any) {
       console.error("Repayment error:", error)
 
@@ -119,10 +72,7 @@ export function LoansInterface() {
   const handleApplicationSuccess = async () => {
     // Refresh loan data after successful application
     try {
-      const loan = await getActiveLoan()
-      if (loan && loan.isActive) {
-        setActiveLoan(loan)
-      }
+      await refetchLoan()
     } catch (error) {
       console.error("Error refreshing loan data:", error)
     }
@@ -166,11 +116,11 @@ export function LoansInterface() {
                 <div>
                   <div className="text-sm text-muted-foreground mb-1">Maximum Loan Amount</div>
                   <div className="text-3xl font-bold">
-                    ${parseFloat(eligibility.maxAmount || "0").toFixed(2)}
+                    $1,000.00
                   </div>
                 </div>
-                <Badge className={eligibility.isEligible ? "bg-primary" : "bg-destructive"}>
-                  {eligibility.isEligible ? (
+                <Badge className={isEligible ? "bg-primary" : "bg-destructive"}>
+                  {isEligible ? (
                     <>
                       <CheckCircle2 className="mr-1 h-3 w-3" />
                       Eligible
@@ -186,7 +136,7 @@ export function LoansInterface() {
               <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                 <div>
                   <div className="text-sm text-muted-foreground">Interest Rate</div>
-                  <div className="text-lg font-semibold">{eligibility.interestRate}%</div>
+                  <div className="text-lg font-semibold">{interestRate ? Number(interestRate) / 100 : 12}%</div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">Loan Terms</div>
@@ -196,7 +146,7 @@ export function LoansInterface() {
               <Button
                 onClick={() => setShowApplicationModal(true)}
                 className="w-full"
-                disabled={!eligibility.isEligible || activeLoan !== null}
+                disabled={!isEligible || activeLoan !== null}
               >
                 {activeLoan ? "Loan Already Active" : "Apply for Loan"}
               </Button>
@@ -301,12 +251,12 @@ export function LoansInterface() {
         </Card>
       </div>
 
-      {eligibility.isEligible && (
+      {isEligible && (
         <LoanApplicationModal
           open={showApplicationModal}
           onClose={() => setShowApplicationModal(false)}
-          maxAmount={eligibility.maxAmount}
-          interestRate={eligibility.interestRate}
+          maxAmount="1000"
+          interestRate={interestRate ? Number(interestRate) / 100 : 12}
           onSuccess={handleApplicationSuccess}
         />
       )}

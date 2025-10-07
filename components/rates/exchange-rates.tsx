@@ -57,13 +57,16 @@ export function ExchangeRates() {
   const calculateCrossRate = (from: string, to: string) => {
     if (!rates) return 0
 
+    // Type-safe access to rates object
+    const ratesRecord = rates as unknown as Record<string, number>
+
     // If we have direct rate
     const directKey = `${from}_${to}`
-    if (rates[directKey]) return rates[directKey]
+    if (ratesRecord[directKey]) return ratesRecord[directKey]
 
     // Calculate through USD
-    const fromUSD = from === 'USD' ? 1 : (rates[`USD_${from}`] || 0)
-    const toUSD = to === 'USD' ? 1 : (rates[`USD_${to}`] || 0)
+    const fromUSD = from === 'USD' ? 1 : (ratesRecord[`USD_${from}`] || 0)
+    const toUSD = to === 'USD' ? 1 : (ratesRecord[`USD_${to}`] || 0)
 
     if (fromUSD && toUSD) {
       return toUSD / fromUSD

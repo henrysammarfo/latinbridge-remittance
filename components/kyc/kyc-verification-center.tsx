@@ -103,7 +103,7 @@ const tiers = [
 export function KYCVerificationCenter() {
   const { toast } = useToast()
   const { address, isConnected } = useAccount()
-  const { getKYCStatus, updateKYCLevel } = useUserRegistry()
+  const { getKYCStatus } = useUserRegistry()
 
   const [selectedTier, setSelectedTier] = useState<KYCTier | null>(null)
   const [currentTiers, setCurrentTiers] = useState(tiers)
@@ -192,11 +192,13 @@ export function KYCVerificationCenter() {
 
       // Update KYC level on blockchain
       const newLevel = tierToKYCLevel(selectedTier)
-      await updateKYCLevel(newLevel)
+      // TODO: Implement updateKYCLevel in useUserRegistry hook
+      // For testnet: KYC verification requires admin/oracle role on smart contract
+      // await updateKYCLevel(newLevel)
 
       toast({
-        title: "KYC Updated!",
-        description: `You are now verified at ${getTierName(selectedTier)}`,
+        title: "KYC Simulation Complete",
+        description: `KYC verification simulated for ${getTierName(selectedTier)}. On mainnet, this will update your on-chain KYC status.`,
       })
 
       // Update local state
