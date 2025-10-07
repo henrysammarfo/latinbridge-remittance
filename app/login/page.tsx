@@ -1,24 +1,48 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Wallet, AlertCircle, Loader2 } from 'lucide-react'
 import { useAccount, useConnect } from 'wagmi'
+import { useUserRegistry } from '@/lib/web3/hooks/useUserRegistry'
 
 export default function LoginPage() {
   const router = useRouter()
   const { isConnected, address } = useAccount()
   const { connect, connectors, isPending, error: connectError } = useConnect()
+  const { isRegistered } = useUserRegistry()
+  const [isCheckingRegistration, setIsCheckingRegistration] = useState(false)
 
-  // Redirect to dashboard when wallet is connected
+  // Check registration status and redirect accordingly
   useEffect(() => {
-    if (isConnected && address) {
-      router.push('/dashboard')
+    const checkAndRedirect = async () => {
+      if (isConnected && address) {
+        try {
+          setIsCheckingRegistration(true)
+          const registered = await isRegistered()
+
+          if (registered) {
+            // User is registered, go to dashboard
+            router.push('/dashboard')
+          } else {
+            // User is not registered, go to onboarding
+            router.push('/onboarding')
+          }
+        } catch (error) {
+          console.error('Error checking registration:', error)
+          // On error, default to onboarding
+          router.push('/onboarding')
+        } finally {
+          setIsCheckingRegistration(false)
+        }
+      }
     }
-  }, [isConnected, address, router])
+
+    checkAndRedirect()
+  }, [isConnected, address, router, isRegistered])
 
   const handleConnect = async () => {
     try {
@@ -77,10 +101,10 @@ export default function LoginPage() {
             onClick={handleConnect}
             className="w-full"
             size="lg"
-            disabled={!hasWallet || isPending || isConnected}
+            disabled={!hasWallet || isPending || isConnected || isCheckingRegistration}
           >
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isConnected ? 'Connected - Redirecting...' : 'Connect Wallet'}
+            {(isPending || isCheckingRegistration) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isCheckingRegistration ? 'Checking registration...' : isConnected ? 'Connected - Redirecting...' : 'Connect Wallet'}
           </Button>
 
           <div className="text-center text-sm text-muted-foreground space-y-2">

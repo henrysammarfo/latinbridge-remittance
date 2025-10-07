@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { QrCode, Link2, Copy, Share2, CheckCircle2 } from "lucide-react"
+import { QrCode, Link2, Copy, Share2, CheckCircle2, Download } from "lucide-react"
+import { useAccount } from "wagmi"
+import { QRCodeCanvas } from "qrcode.react"
 
 const currencies = [
   { code: "USD", name: "US Dollar" },
@@ -19,22 +21,59 @@ const currencies = [
 ]
 
 export function ReceiveMoneyInterface() {
+  const { address, isConnected } = useAccount()
   const [amount, setAmount] = useState("")
   const [currency, setCurrency] = useState("USD")
   const [note, setNote] = useState("")
   const [linkGenerated, setLinkGenerated] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  const paymentLink = `https://latinbridge.app/pay/${Date.now().toString(36)}`
+  // Create payment data that includes wallet address
+  const paymentData = JSON.stringify({
+    address: address || '',
+    amount: amount || '0',
+    currency,
+    note: note || '',
+  })
 
   const handleGenerateLink = () => {
+    if (!isConnected) {
+      alert('Please connect your wallet first')
+      return
+    }
     setLinkGenerated(true)
   }
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(paymentLink)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  const handleCopyAddress = () => {
+    if (address) {
+      navigator.clipboard.writeText(address)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const handleDownloadQR = () => {
+    const canvas = document.getElementById('qr-code') as HTMLCanvasElement
+    if (canvas) {
+      const url = canvas.toDataURL('image/png')
+      const link = document.createElement('a')
+      link.download = `latinbridge-payment-qr-${Date.now()}.png`
+      link.href = url
+      link.click()
+    }
+  }
+
+  const handleShare = async () => {
+    if (navigator.share && address) {
+      try {
+        await navigator.share({
+          title: 'LatinBridge Payment Request',
+          text: `Send ${amount ? `${amount} ${currency}` : 'payment'} to my wallet: ${address}`,
+        })
+      } catch (err) {
+        console.error('Share error:', err)
+      }
+    }
   }
 
   return (
@@ -95,29 +134,40 @@ export function ReceiveMoneyInterface() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex justify-center p-6 bg-white rounded-lg">
-              <div className="h-48 w-48 bg-muted flex items-center justify-center rounded-lg border-2 border-dashed">
-                <QrCode className="h-24 w-24 text-muted-foreground" />
-              </div>
+              <QRCodeCanvas
+                id="qr-code"
+                value={paymentData}
+                size={192}
+                level="H"
+                includeMargin={true}
+              />
             </div>
 
             <div className="space-y-2">
-              <Label>Payment Link</Label>
+              <Label>Your Wallet Address</Label>
               <div className="flex gap-2">
-                <Input value={paymentLink} readOnly className="flex-1 bg-muted" />
-                <Button variant="outline" size="icon" onClick={handleCopyLink}>
+                <Input
+                  value={address || ''}
+                  readOnly
+                  className="flex-1 bg-muted font-mono text-sm"
+                />
+                <Button variant="outline" size="icon" onClick={handleCopyAddress}>
                   {copied ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Share this address to receive payments directly to your wallet
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline">
-                <QrCode className="mr-2 h-4 w-4" />
+              <Button variant="outline" onClick={handleDownloadQR}>
+                <Download className="mr-2 h-4 w-4" />
                 Download QR
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleShare}>
                 <Share2 className="mr-2 h-4 w-4" />
-                Share Link
+                Share
               </Button>
             </div>
 
