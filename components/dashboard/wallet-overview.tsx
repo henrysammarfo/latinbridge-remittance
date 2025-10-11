@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, Eye, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -12,6 +13,14 @@ export function WalletOverview() {
   const { isConnected } = useAccount()
   const { useBalanceOf, useTotalBalance } = useRemittance()
   const { useBalance: useSavingsBalance } = useSavings()
+  const [exchangeRates, setExchangeRates] = useState({
+    USD: 1,
+    MXN: 18.5,
+    BRL: 5.0,
+    ARS: 350.0,
+    COP: 4000.0,
+    GTQ: 7.8,
+  })
 
   // Get balances for all 6 currencies
   const balances = {
@@ -26,6 +35,26 @@ export function WalletOverview() {
   // Get savings balance
   const savingsUSD = useSavingsBalance(Currency.USD)
 
+  // Fetch live exchange rates from API
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const response = await fetch('/api/rates/current')
+        const data = await response.json()
+        if (data.rates) {
+          setExchangeRates(data.rates)
+        }
+      } catch (error) {
+        console.error('Failed to fetch exchange rates:', error)
+        // Keep using default rates if API fails
+      }
+    }
+
+    fetchRates()
+    const interval = setInterval(fetchRates, 60000) // Update every minute
+    return () => clearInterval(interval)
+  }, [])
+
   if (!isConnected) {
     return (
       <Card className="border-border/50">
@@ -36,16 +65,6 @@ export function WalletOverview() {
         </CardContent>
       </Card>
     )
-  }
-
-  // Approximate exchange rates for USD conversion
-  const exchangeRates = {
-    USD: 1,
-    MXN: 18.5,
-    BRL: 5.0,
-    ARS: 350.0,
-    COP: 4000.0,
-    GTQ: 7.8,
   }
 
   // Calculate total available in USD
