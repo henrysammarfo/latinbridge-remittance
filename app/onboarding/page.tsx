@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { useUserRegistry } from '@/lib/web3/hooks/useUserRegistry'
-import { Loader2, User, Mail, Phone, MapPin } from 'lucide-react'
+import { Loader2, User, Mail, Phone, MapPin, Wallet, CheckCircle2 } from 'lucide-react'
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -39,12 +39,7 @@ export default function OnboardingPage() {
     checkRegistration()
   }, [isConnected, address, isRegistered, isCheckingRegistration, router])
 
-  // Redirect to login if not connected
-  useEffect(() => {
-    if (!isConnected) {
-      router.push('/login')
-    }
-  }, [isConnected, router])
+  // No longer redirect - we'll show wallet connect button on this page
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -112,13 +107,62 @@ export default function OnboardingPage() {
     }
   }
 
-  if (!isConnected || isCheckingRegistration) {
+  // Show wallet connect UI if not connected
+  if (!isConnected) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted/20">
+        <Card className="w-full max-w-md border-border/50">
+          <CardHeader className="space-y-1 text-center">
+            <Wallet className="h-12 w-12 text-primary mx-auto mb-4" />
+            <CardTitle className="text-2xl font-bold">Connect Your Wallet</CardTitle>
+            <CardDescription>
+              Connect your Web3 wallet to complete your profile registration
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+                <span>Secure wallet connection</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+                <span>Profile stored on blockchain</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+                <span>No passwords needed</span>
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <Button 
+                className="w-full" 
+                size="lg"
+                onClick={() => router.push('/login')}
+              >
+                <Wallet className="mr-2 h-5 w-5" />
+                Connect Wallet
+              </Button>
+            </div>
+
+            <p className="text-xs text-center text-muted-foreground">
+              After connecting, you'll fill in your profile details
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Show loading state while checking registration
+  if (isCheckingRegistration) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md border-border/50">
           <CardContent className="p-12 text-center">
             <Loader2 className="h-8 w-8 text-primary mx-auto mb-4 animate-spin" />
-            <p className="text-muted-foreground">Loading...</p>
+            <p className="text-muted-foreground">Checking registration status...</p>
           </CardContent>
         </Card>
       </div>
