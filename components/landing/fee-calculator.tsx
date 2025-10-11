@@ -53,6 +53,7 @@ export function FeeCalculator() {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="1000"
+                    suppressHydrationWarning
                   />
                 </div>
                 <div className="space-y-2">
