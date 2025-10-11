@@ -38,11 +38,14 @@ let ratesCache: {
 
 /**
  * Fetch from ExchangeRate-API (Primary - supports ALL currencies!)
- * API Key: 0eafc98275744c50fadabce2
  */
 async function fetchFromExchangeRateAPI(): Promise<ExchangeRates | null> {
   try {
-    const apiKey = process.env.EXCHANGE_RATE_API_KEY || '0eafc98275744c50fadabce2';
+    const apiKey = process.env.EXCHANGE_RATE_API_KEY;
+    if (!apiKey) {
+      console.warn('EXCHANGE_RATE_API_KEY not configured');
+      return null;
+    }
     const apiUrl = process.env.EXCHANGE_RATE_API_URL || 'https://v6.exchangerate-api.com/v6';
 
     const response = await fetch(`${apiUrl}/${apiKey}/latest/USD`, {
@@ -75,11 +78,14 @@ async function fetchFromExchangeRateAPI(): Promise<ExchangeRates | null> {
 
 /**
  * Fetch from FreeCurrencyAPI (Backup - supports MXN, BRL only)
- * API Key: fca_live_uL1JE9Q4sDZFVpkzEhEkH9hc276b0dSBT3uTHYYO
  */
 async function fetchFromFreeCurrencyAPI(): Promise<Partial<ExchangeRates> | null> {
   try {
-    const apiKey = process.env.FREE_CURRENCY_API_KEY || 'fca_live_uL1JE9Q4sDZFVpkzEhEkH9hc276b0dSBT3uTHYYO';
+    const apiKey = process.env.FREE_CURRENCY_API_KEY;
+    if (!apiKey) {
+      console.warn('FREE_CURRENCY_API_KEY not configured');
+      return null;
+    }
     const apiUrl = process.env.FREE_CURRENCY_API_URL || 'https://api.freecurrencyapi.com/v1';
 
     const currencies = 'MXN,BRL';
