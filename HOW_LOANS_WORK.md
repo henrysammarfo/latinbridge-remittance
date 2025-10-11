@@ -14,23 +14,28 @@
 
 ### 2. Approval (Admin Only)
 - Loans must be approved by the contract owner
+- **You (admin) call `approveLoan(loanId)` on the contract**
 - Upon approval:
   - Interest rate is calculated based on user's credit score
   - Loan status changes to "Active"
   - Due date is set
   - Repayment schedule is created
+  - **Loan is recorded on-chain**
 
-### 3. Disbursement
-- **PAS tokens are transferred directly to the borrower's wallet**
-- The loan amount is sent from the MicroloanManager contract
+### 3. Disbursement (Manual)
+- **After approving on-chain, YOU manually send PAS tokens from your wallet**
+- Open MetaMask and send the loan amount to the borrower's address
 - Borrower receives full loan amount in PAS
+- **Your wallet = The loan fund source**
+- Mark the loan as "Funded" in the admin panel to track it
 
-### 4. Repayment
-- Borrowers repay the loan by sending PAS tokens back to the contract
-- Repayment amount = Principal + Interest
-- Interest is calculated based on:
-  - Credit score (better score = lower interest)
-  - Duration (longer term = more interest)
+### 4. Repayment (Manual + On-Chain)
+- Borrowers are shown YOUR wallet address for repayments
+- They send PAS tokens (Principal + Interest) directly to your wallet
+- After receiving payment, they call `repayLoan(loanId, amount)` on the contract
+- This records the repayment on-chain
+- **You receive PAS directly to your wallet**
+- Contract tracks the repayment status
   
 ### 5. Credit Score Impact
 - Successful repayment improves credit score
@@ -39,31 +44,49 @@
 
 ## For Testnet Demo
 
-Since this is on Paseo testnet:
+### For Borrowers:
 
 1. **Get PAS tokens** from the faucet:
    - Visit: https://faucet.polkadot.io/paseo
    - Request testnet PAS tokens
    
-2. **Deposit PAS** to your LatinBridge account:
-   - Go to "Add Money" page
-   - Deposit PAS tokens
-
-3. **Apply for a loan**:
+2. **Apply for a loan**:
    - Navigate to "Loans" page
    - Fill out loan application
    - Loan will show as "Pending"
 
-4. **Admin Approval Required**:
-   - On testnet, the contract owner must approve loans
-   - In production, this could be automated based on credit score
+3. **Wait for approval**:
+   - Admin reviews and approves on-chain
+   - Admin sends PAS directly to your wallet
    
-5. **Receive PAS tokens**:
-   - Once approved, PAS tokens are sent to your wallet
-   - Use them for remittances, exchanges, or savings
+4. **Receive PAS tokens**:
+   - Check your wallet for the loan amount
+   - Use PAS for remittances, exchanges, or savings
 
-6. **Repay**:
-   - Repay the loan amount + interest in PAS tokens
+5. **Repay**:
+   - Send loan amount + interest in PAS to admin address (shown in UI)
+   - Call `repayLoan()` on the contract to record repayment
+   - This updates your credit score
+
+### For Admin (You):
+
+1. **Access admin panel**:
+   - Go to `/admin/loans` to see applications
+   
+2. **Review and approve**:
+   - See borrower details and loan amount
+   - Call `approveLoan(loanId)` on MicroloanManager contract
+   - Link provided in admin panel
+
+3. **Send PAS tokens**:
+   - Copy borrower's address from admin panel
+   - Send loan amount from your MetaMask
+   - Click "Mark as Funded" to track it
+
+4. **Receive repayments**:
+   - Borrowers send PAS back to your address
+   - Track via your wallet balance
+   - On-chain contract records the repayment status
 
 ## Smart Contract Functions
 

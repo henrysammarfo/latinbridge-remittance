@@ -4,11 +4,17 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CreditCard, Clock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react"
+import { CreditCard, Clock, CheckCircle2, AlertCircle, Loader2, Copy, ExternalLink, Wallet } from "lucide-react"
 import { LoanApplicationModal } from "./loan-application-modal"
 import { useLoans } from "@/lib/web3/hooks/useLoans"
 import { useAccount } from "wagmi"
 import { useToast } from "@/hooks/use-toast"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+
+// Admin wallet address for loan repayments
+const ADMIN_REPAYMENT_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_WALLET || "0x..."
 
 export function LoansInterface() {
   const { toast } = useToast()
@@ -205,6 +211,39 @@ export function LoansInterface() {
                   />
                 </div>
 
+                {/* Repayment Instructions */}
+                <Alert className="bg-blue-500/10 border-blue-500/20">
+                  <Wallet className="h-4 w-4 text-blue-500" />
+                  <AlertDescription>
+                    <p className="font-semibold mb-2 text-blue-700 dark:text-blue-400">
+                      How to Repay Your Loan
+                    </p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Send <strong>{activeLoan.remainingAmount} PAS tokens</strong> to the admin address below:
+                    </p>
+                    <div className="flex gap-2 mt-2">
+                      <Input 
+                        value={ADMIN_REPAYMENT_ADDRESS}
+                        readOnly 
+                        className="font-mono text-xs bg-background"
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          navigator.clipboard.writeText(ADMIN_REPAYMENT_ADDRESS)
+                          toast({ title: "Address copied!", description: "Admin repayment address copied to clipboard" })
+                        }}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      After sending, your repayment will be tracked on-chain via the smart contract.
+                    </p>
+                  </AlertDescription>
+                </Alert>
+
                 <div className="flex gap-3">
                   <Button
                     variant="outline"
@@ -220,11 +259,15 @@ export function LoansInterface() {
                     ) : (
                       <>
                         <CreditCard className="mr-2 h-4 w-4" />
-                        Make Payment
+                        Record Repayment On-Chain
                       </>
                     )}
                   </Button>
                 </div>
+                
+                <p className="text-xs text-center text-muted-foreground">
+                  Click above after sending PAS to record your repayment
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -239,12 +282,15 @@ export function LoansInterface() {
               <div>
                 <h3 className="font-semibold mb-2">How Microloans Work</h3>
                 <ul className="space-y-1 text-sm text-muted-foreground">
-                  <li>• Borrow based on your KYC level and credit score</li>
-                  <li>• Interest rates determined by your creditworthiness</li>
-                  <li>• Flexible repayment terms from 3 to 24 months</li>
-                  <li>• Collateral secured through smart contract</li>
-                  <li>• Funds deposited to your wallet instantly</li>
+                  <li>• <strong>Apply:</strong> Submit loan application with amount in PAS tokens</li>
+                  <li>• <strong>Approval:</strong> Admin reviews and approves your application</li>
+                  <li>• <strong>Receive:</strong> PAS tokens sent directly to your wallet</li>
+                  <li>• <strong>Repay:</strong> Send PAS + interest back to admin address</li>
+                  <li>• <strong>Track:</strong> All transactions recorded on blockchain</li>
                 </ul>
+                <p className="text-xs text-muted-foreground mt-3 pt-3 border-t">
+                  <strong>Note:</strong> Loans are disbursed in PAS tokens. Interest rates based on your credit score (5-15% APR).
+                </p>
               </div>
             </div>
           </CardContent>
