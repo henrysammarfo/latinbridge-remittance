@@ -1,8 +1,8 @@
-# 🌉 LatinBridge - Blockchain Cross-Border Remittance Platform
+# LatinBridge - Cross-Border Remittance Platform
 
 <div align="center">
 
-**Built for LATIN HACK 2025** 🏆
+**Built for LATIN HACK 2025**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -11,42 +11,47 @@
 
 ### Solving the $165 Billion Latin America Remittance Crisis
 
-**0.5% Fees** | **Instant Settlement** | **6 Currencies** | **Live APIs** | **100% Deployed**
+**0.5% Fees** | **Instant Settlement** | **6 Currencies** | **Live on Testnet**
 
-[Live Demo](http://localhost:3000) | [Documentation](./docs) | [Smart Contracts](#smart-contracts) | [Testing Guide](#testing)
+[Live Demo](https://latinbridge-remittance.vercel.app/) | [Video Demo](#video-demo) | [Testing Guide](./JUDGE_TESTING_GUIDE.md)
 
 </div>
 
 ---
 
-## 🎯 Problem & Solution
+## Problem & Solution
 
 ### The Problem
-- 💸 **$165B** annual remittances to Latin America
-- 📊 **6-8%** average fees (vs our 0.5%)
-- ⏰ **2-3 days** settlement time (vs instant)
-- 🚫 **50M+** underbanked migrants need better solutions
+- **$165B** annual remittances to Latin America
+- **6-8%** average fees charged by traditional services
+- **2-3 days** settlement time for cross-border transfers
+- **50M+** underbanked migrants need better financial access
 
 ### Our Solution
-LatinBridge is a **production-ready** blockchain remittance platform with:
+LatinBridge is a production-ready blockchain remittance platform built on Polkadot with:
 
-✅ **Live Blockchain Integration** - 6 deployed smart contracts on Polkadot Paseo  
-✅ **Real-Time Exchange Rates** - Live APIs (no mock data)  
-✅ **DeFi Features** - 5% APY savings, 5-15% microloans  
-✅ **Multi-Currency** - USD, MXN, BRL, ARS, COP, GTQ  
-✅ **KYC Compliant** - 3-tier verification system  
-✅ **Local Payment Networks** - PIX, SPEI, PSE, CoDi, ACH  
+- **Live Blockchain Integration** - 6 deployed smart contracts on Polkadot Paseo testnet
+- **Real-Time Exchange Rates** - Live API integration for accurate currency conversion
+- **DeFi Features** - 5% APY savings pools and credit-based microloans
+- **Multi-Currency Support** - USD, MXN, BRL, ARS, COP, GTQ
+- **Payment Networks** - Integration with local payment systems (PIX, SPEI, PSE, etc.)
+- **Secure & Compliant** - KYC verification system and wallet-based authentication
 
 ---
 
-## 🚀 Quick Start
+## Video Demo
+
+<!-- YouTube video link will be added here -->
+
+---
+
+## Quick Start
 
 ### Prerequisites
 ```bash
 Node.js 18+
-npm 9+
+npm or yarn
 MetaMask wallet
-PAS testnet tokens (from faucet)
 ```
 
 ### Installation
@@ -330,15 +335,18 @@ npm start
 ### Environment Variables
 Copy `.env.example` to `.env.local` and configure:
 ```env
-# Blockchain
-NEXT_PUBLIC_USER_REGISTRY=0xfba...
-NEXT_PUBLIC_REMITTANCE_VAULT=0x24d...
-# ... (all contract addresses)
+# Blockchain - See deployed contract addresses in Architecture section
+NEXT_PUBLIC_USER_REGISTRY=<contract_address>
+NEXT_PUBLIC_REMITTANCE_VAULT=<contract_address>
+# See all contract addresses in the Smart Contracts table above
 
-# APIs
-EXCHANGE_RATE_API_KEY=your_key
-DIDIT_API_KEY=your_key
-STRIPE_SECRET_KEY=your_key
+# APIs - Get your own API keys from:
+# - ExchangeRate-API: https://www.exchangerate-api.com
+# - Didit: https://didit.me  
+# - Stripe: https://stripe.com
+EXCHANGE_RATE_API_KEY=<your_key>
+DIDIT_API_KEY=<your_key>
+STRIPE_SECRET_KEY=<your_key>
 
 # Network
 NEXT_PUBLIC_RPC_URL=https://testnet-passet-hub-eth-rpc.polkadot.io
@@ -370,32 +378,32 @@ This is a hackathon project for LATIN HACK 2025. For production deployment:
 
 ---
 
-## 🏆 LATIN HACK 2025
+## Built for LATIN HACK 2025
 
-### Why LatinBridge Will Win
+### Key Highlights
 
-1. **✅ Complete Implementation**
-   - 6 deployed smart contracts (not mockups)
-   - Live API integrations (verified)
-   - Zero mock data (proven by audit)
+1. **Complete Implementation**
+   - 6 deployed smart contracts on Polkadot Paseo testnet
+   - Live API integrations for exchange rates, KYC, and payments
+   - Real-time blockchain transactions
 
-2. **✅ Production Quality**
-   - TypeScript throughout
-   - Professional UI/UX
-   - Comprehensive testing
-   - Full documentation
+2. **Production Quality**
+   - TypeScript throughout for type safety
+   - Modern UI/UX with Next.js 15 and Tailwind CSS
+   - Comprehensive testing platform
+   - Full documentation for judges and developers
 
-3. **✅ Real Impact**
-   - $165B market opportunity
-   - 92% fee reduction
-   - Instant vs 3-day settlement
-   - 50M+ potential users
+3. **Real-World Impact**
+   - Addresses $165B Latin America remittance market
+   - 0.5% fees vs 6-8% traditional services (92% reduction)
+   - Instant settlement vs 2-3 day traditional transfers
+   - Targets 50M+ underbanked migrants
 
-4. **✅ Innovation**
-   - Multi-currency DeFi
-   - Credit-based lending
-   - Local payment integration
-   - KYC compliance
+4. **Innovation**
+   - Multi-currency DeFi features (savings & loans)
+   - On-chain credit scoring system
+   - Local payment network integration
+   - Blockchain-based KYC compliance
 
 ---
 
@@ -421,10 +429,10 @@ MIT License - see LICENSE file for details
 
 <div align="center">
 
-**Built with ❤️ for LATIN HACK 2025**
+**Built for LATIN HACK 2025**
 
-**Solving the $165B remittance crisis, one transaction at a time** 🌉
+Solving the $165B remittance crisis with blockchain technology
 
-⭐ Star us on GitHub if you like this project!
+MIT License | 2025
 
 </div>

@@ -3,13 +3,45 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { ExternalLink, Wallet, Info, CheckCircle2, CreditCard, Building2, ArrowRight } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ExternalLink, Wallet, Info, CheckCircle2, CreditCard, Building2, ArrowRight, Loader2 } from "lucide-react"
 import { useAccount } from "wagmi"
 import { useState } from "react"
+import { useRemittance } from "@/lib/web3/hooks/useRemittance"
+import { Currency } from "@/lib/web3/hooks/useContracts"
+import { useToast } from "@/hooks/use-toast"
+import { TransactionModal, TransactionState } from "@/components/shared/TransactionModal"
 
 export function AddMoneyInterface() {
   const { address, isConnected } = useAccount()
+  const { deposit, pasBalance, useBalanceOf } = useRemittance()
+  const { toast } = useToast()
   const [copied, setCopied] = useState(false)
+  
+  // Deposit form state
+  const [depositAmount, setDepositAmount] = useState("")
+  const [depositCurrency, setDepositCurrency] = useState<string>("USD")
+  const [txState, setTxState] = useState<TransactionState>('idle')
+  const [txHash, setTxHash] = useState<string>()
+  const [error, setError] = useState<string>()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Get current balance for selected currency
+  const getCurrencyEnum = (code: string): Currency => {
+    switch (code) {
+      case 'USD': return Currency.USD
+      case 'MXN': return Currency.MXN
+      case 'BRL': return Currency.BRL
+      case 'ARS': return Currency.ARS
+      case 'COP': return Currency.COP
+      case 'GTQ': return Currency.GTQ
+      default: return Currency.USD
+    }
+  }
+
+  const { balance: currencyBalance, refetch } = useBalanceOf(getCurrencyEnum(depositCurrency))
 
   const handleCopyAddress = () => {
     if (address) {
@@ -19,10 +51,210 @@ export function AddMoneyInterface() {
     }
   }
 
+  const handleDeposit = async () => {
+    if (!isConnected) {
+      toast({
+        title: "Wallet not connected",
+        description: "Please connect your wallet first",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (!depositAmount || parseFloat(depositAmount) <= 0) {
+      toast({
+        title: "Invalid amount",
+        description: "Please enter a valid amount",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (parseFloat(depositAmount) > parseFloat(pasBalance)) {
+      toast({
+        title: "Insufficient balance",
+        description: `You only have ${parseFloat(pasBalance).toFixed(4)} PAS tokens`,
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      setIsModalOpen(true)
+      setTxState('signing')
+      setError(undefined)
+
+      const hash = await deposit(getCurrencyEnum(depositCurrency), depositAmount)
+      
+      setTxHash(hash)
+      setTxState('pending')
+
+      // Simulate confirmation
+      setTimeout(() => {
+        setTxState('success')
+        refetch() // Refresh balance
+        
+        toast({
+          title: "Deposit successful!",
+          description: `${depositAmount} PAS deposited as ${depositCurrency}`,
+        })
+
+        setTimeout(() => {
+          setIsModalOpen(false)
+          setDepositAmount("")
+        }, 2000)
+      }, 3000)
+
+    } catch (err: any) {
+      console.error('Deposit error:', err)
+      
+      let errorMessage = 'Deposit failed'
+      if (err?.message) {
+        if (err.message.includes('User rejected')) {
+          errorMessage = 'Transaction rejected by user'
+        } else if (err.message.includes('insufficient funds')) {
+          errorMessage = 'Insufficient PAS tokens in wallet'
+        } else {
+          errorMessage = err.message
+        }
+      }
+
+      setError(errorMessage)
+      setTxState('error')
+      
+      toast({
+        title: "Deposit failed",
+        description: errorMessage,
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setTxState('idle')
+    setTxHash(undefined)
+    setError(undefined)
+  }
+
   return (
     <div className="space-y-6">
-      {/* Testnet Method - Primary */}
+      {/* Deposit PAS Tokens - Primary Action */}
       <Card className="border-primary/50">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-5 w-5 text-primary" />
+              <CardTitle>Deposit PAS Tokens</CardTitle>
+            </div>
+            {isConnected && (
+              <div className="text-sm text-muted-foreground">
+                Balance: <span className="font-medium text-foreground">{parseFloat(pasBalance).toFixed(4)} PAS</span>
+              </div>
+            )}
+          </div>
+          <CardDescription>
+            Deposit your PAS tokens from MetaMask into LatinBridge to start using the platform
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {!isConnected ? (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Please connect your wallet to deposit tokens
+              </AlertDescription>
+            </Alert>
+          ) : parseFloat(pasBalance) === 0 ? (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                You don't have any PAS tokens. Get free tokens from the faucet below.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="deposit-amount">Amount (PAS Tokens)</Label>
+                  <Input
+                    id="deposit-amount"
+                    type="number"
+                    placeholder="0.00"
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    min="0"
+                    step="0.01"
+                    max={pasBalance}
+                  />
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Available: {parseFloat(pasBalance).toFixed(4)} PAS</span>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs"
+                      onClick={() => setDepositAmount(pasBalance)}
+                    >
+                      Use Max
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="deposit-currency">Deposit As Currency</Label>
+                  <Select value={depositCurrency} onValueChange={setDepositCurrency}>
+                    <SelectTrigger id="deposit-currency">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD - US Dollar</SelectItem>
+                      <SelectItem value="MXN">MXN - Mexican Peso</SelectItem>
+                      <SelectItem value="BRL">BRL - Brazilian Real</SelectItem>
+                      <SelectItem value="ARS">ARS - Argentine Peso</SelectItem>
+                      <SelectItem value="COP">COP - Colombian Peso</SelectItem>
+                      <SelectItem value="GTQ">GTQ - Guatemalan Quetzal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Current {depositCurrency} balance: {parseFloat(currencyBalance).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertTitle>How It Works</AlertTitle>
+                <AlertDescription className="text-sm">
+                  When you deposit PAS tokens, they're converted to your chosen currency in the smart contract.
+                  You can then send, save, or get loans using this balance.
+                </AlertDescription>
+              </Alert>
+
+              <Button 
+                className="w-full" 
+                size="lg"
+                onClick={handleDeposit}
+                disabled={!depositAmount || parseFloat(depositAmount) <= 0 || txState !== 'idle'}
+              >
+                {txState === 'idle' ? (
+                  <>
+                    <Wallet className="mr-2 h-4 w-4" />
+                    Deposit {depositAmount || '0'} PAS as {depositCurrency}
+                  </>
+                ) : (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                )}
+              </Button>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Testnet Faucet - Get Free Tokens */}
+      <Card className="border-border/50">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Wallet className="h-5 w-5 text-primary" />
@@ -239,6 +471,17 @@ export function AddMoneyInterface() {
           </a>
         </Button>
       </div>
+
+      {/* Transaction Modal */}
+      <TransactionModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        state={txState}
+        txHash={txHash}
+        error={error}
+        title="Deposit PAS Tokens"
+        description={`Depositing ${depositAmount} PAS as ${depositCurrency}`}
+      />
     </div>
   )
 }
