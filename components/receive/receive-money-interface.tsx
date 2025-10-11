@@ -68,7 +68,7 @@ export function ReceiveMoneyInterface() {
       try {
         await navigator.share({
           title: 'LatinBridge Payment Request',
-          text: `Send ${amount ? `${amount} ${currency}` : 'payment'} to my wallet: ${address}`,
+          text: `Send ${amount ? `${amount} ${currency}` : 'payment'} via LatinBridge to: ${address}\n\nUse the "Send Money" feature on latinbridge.com and enter this address.`,
         })
       } catch (err) {
         console.error('Share error:', err)
@@ -81,6 +81,9 @@ export function ReceiveMoneyInterface() {
       <Card className="border-border/50">
         <CardHeader>
           <CardTitle>Request Payment</CardTitle>
+          <p className="text-sm text-muted-foreground mt-2">
+            Generate a payment request for receiving money through LatinBridge platform
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -130,7 +133,10 @@ export function ReceiveMoneyInterface() {
       {linkGenerated && (
         <Card className="border-border/50">
           <CardHeader>
-            <CardTitle>Payment Link Generated</CardTitle>
+            <CardTitle>Payment Request Generated</CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              Share this with the sender to receive money via LatinBridge
+            </p>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex justify-center p-6 bg-white rounded-lg">
@@ -144,7 +150,7 @@ export function ReceiveMoneyInterface() {
             </div>
 
             <div className="space-y-2">
-              <Label>Your Wallet Address</Label>
+              <Label>Your LatinBridge ID</Label>
               <div className="flex gap-2">
                 <Input
                   value={address || ''}
@@ -155,9 +161,18 @@ export function ReceiveMoneyInterface() {
                   {copied ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Share this address to receive payments directly to your wallet
-              </p>
+              <div className="rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 p-3 mt-2">
+                <p className="text-xs text-blue-900 dark:text-blue-200 font-medium mb-1">
+                  💡 How to receive money:
+                </p>
+                <p className="text-xs text-blue-800 dark:text-blue-300">
+                  Share this ID with the sender. They must use <strong>LatinBridge Send Money</strong> feature to send to this address. 
+                  The money will appear in your <strong>LatinBridge balance</strong>, not your MetaMask wallet.
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-400 mt-2">
+                  They can send in any supported currency (USD, MXN, BRL, etc.) and you'll receive it in your chosen currency.
+                </p>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
