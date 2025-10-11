@@ -34,12 +34,14 @@ export const wagmiConfig = createConfig({
   connectors: [
     injected({
       target: 'metaMask',
+      shimDisconnect: true,
     }),
   ],
   transports: {
     [polkadotPaseo.id]: http(),
   },
   ssr: true,
+  multiInjectedProviderDiscovery: false,
 })
 
 // Export chain for easy access
