@@ -12,9 +12,6 @@ import { Label } from "@/components/ui/label"
 import { useAdmin } from "@/lib/hooks/useAdmin"
 import { useRouter } from "next/navigation"
 
-// This is the admin wallet address that receives loan repayments
-const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET || "0x2F914bcbAD5bf4967BbB11e4372200b7c7594AEB"
-
 export default function AdminLoansPage() {
   const { address, isConnected } = useAccount()
   const { isAdmin } = useAdmin()

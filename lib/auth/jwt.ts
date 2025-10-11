@@ -4,9 +4,12 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { ethers } from 'ethers';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'latinbridge-jwt-secret-change-in-production'
-);
+// Validate JWT_SECRET is configured
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET must be configured in environment variables');
+}
+
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 const JWT_ALGORITHM = 'HS256';
 const JWT_EXPIRATION = '24h';
