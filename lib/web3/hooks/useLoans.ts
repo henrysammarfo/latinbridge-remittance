@@ -62,7 +62,8 @@ export function useLoans() {
   const applyForLoan = async (
     amount: string,
     currency: Currency,
-    durationDays: number
+    durationDays: number,
+    purpose?: string
   ) => {
     if (!address) throw new Error('No wallet connected')
 
@@ -71,8 +72,8 @@ export function useLoans() {
     const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.microloanManager,
       abi: ABIS.microloanManager,
-      functionName: 'applyForLoan',
-      args: [amountWei, currency, BigInt(durationDays)],
+      functionName: 'requestLoan',
+      args: [amountWei, currency, BigInt(durationDays), purpose || 'Personal loan'],
     })
 
     return hash

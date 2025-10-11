@@ -74,6 +74,7 @@ export function useRemittance() {
 
   /**
    * Send remittance
+   * Contract expects: (address recipient, Currency fromCurrency, Currency toCurrency, uint256 amount)
    */
   const sendRemittance = async (
     recipient: `0x${string}`,
@@ -89,7 +90,7 @@ export function useRemittance() {
       address: CONTRACT_ADDRESSES.remittanceVault,
       abi: ABIS.remittanceVault,
       functionName: 'sendRemittance',
-      args: [recipient, amountWei, fromCurrency, toCurrency],
+      args: [recipient, fromCurrency, toCurrency, amountWei], // Fixed parameter order!
     })
 
     return hash

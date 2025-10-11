@@ -108,9 +108,9 @@ export function ExchangeInterface() {
       // Use sendRemittance to self to perform currency exchange
       const hash = await sendRemittance(
         address, // Send to self
+        fromAmount, // Amount as string
         fromCurrencyEnum,
-        toCurrencyEnum,
-        fromAmount
+        toCurrencyEnum
       )
 
       setTxHash(hash)

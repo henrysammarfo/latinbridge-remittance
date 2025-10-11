@@ -64,7 +64,8 @@ export function LoanApplicationModal({ open, onClose, maxAmount, interestRate, o
       await applyForLoan(
         amount,
         currencyEnum,
-        durationDays
+        durationDays,
+        purpose
       )
 
       toast({
