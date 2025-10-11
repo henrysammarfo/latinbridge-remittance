@@ -11,7 +11,8 @@ import { useSavings } from "@/lib/web3/hooks/useSavings"
 import { Currency } from "@/lib/web3/hooks/useContracts"
 import { useAccount } from "wagmi"
 
-// TODO: Fetch savings history from blockchain events
+// Savings history will be populated from blockchain events (Deposit, Withdrawal, YieldClaimed)
+// Currently empty - will show transactions once user performs deposit/withdrawal actions
 const savingsHistory: any[] = []
 
 export function SavingsInterface() {

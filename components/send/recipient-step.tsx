@@ -8,33 +8,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Search, Plus, User } from "lucide-react"
 import type { SendMoneyData } from "./send-money-flow"
 
-// Example recipients for testing - In production, fetch from UserRegistry contract
-const savedRecipients = [
-  {
-    id: "1",
-    name: "Maria Garcia (Example)",
-    email: "maria@example.com",
-    phone: "+52 555 1234",
-    country: "Mexico",
-    walletAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1"
-  },
-  {
-    id: "2",
-    name: "Carlos Rodriguez (Example)",
-    email: "carlos@example.com",
-    phone: "+55 11 9876",
-    country: "Brazil",
-    walletAddress: "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4"
-  },
-  {
-    id: "3",
-    name: "Ana Silva (Example)",
-    email: "ana@example.com",
-    phone: "+54 11 5432",
-    country: "Argentina",
-    walletAddress: "0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2"
-  },
-]
+// Saved recipients - In production, this would be fetched from a backend API or local storage
+// Currently empty - users must add recipients manually by entering wallet addresses
+const savedRecipients: Array<{
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  country: string;
+  walletAddress: string;
+}> = []
 
 interface RecipientStepProps {
   data: SendMoneyData

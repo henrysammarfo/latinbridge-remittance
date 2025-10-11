@@ -436,22 +436,33 @@ function ExchangeRatesTests() {
 
 // API Tests Component
 function APITests() {
+  const { address } = useAccount()
   const [apiStatus, setApiStatus] = useState<any>(null)
   const [testing, setTesting] = useState(false)
 
-  const testAPIs = async () => {
+  const testAllIntegrations = async () => {
     setTesting(true)
     try {
+      // Test Integration Status Endpoint
+      const statusRes = await fetch('/api/integrations/status')
+      const statusData = await statusRes.json()
+
+      // Test Exchange Rates
       const ratesRes = await fetch('/api/rates/current')
       const ratesData = await ratesRes.json()
 
       setApiStatus({
-        exchangeRates: ratesRes.ok ? 'OK' : 'FAILED',
-        ratesData,
+        timestamp: new Date().toISOString(),
+        integrations: statusData.integrations || {},
+        exchangeRates: {
+          status: ratesRes.ok ? 'OK' : 'FAILED',
+          data: ratesData,
+        },
       })
-      toast.success('API test completed!')
+      toast.success('All integration tests completed!')
     } catch (error) {
-      toast.error('API test failed')
+      console.error('API test error:', error)
+      toast.error('Some integration tests failed')
     } finally {
       setTesting(false)
     }
@@ -463,30 +474,118 @@ function APITests() {
         <CardTitle>Live API Integration Tests</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button onClick={testAPIs} disabled={testing} className="w-full">
-          {testing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Test All APIs
+        <Button onClick={testAllIntegrations} disabled={testing} className="w-full gap-2">
+          {testing && <Loader2 className="h-4 w-4 animate-spin" />}
+          Test All Integrations
         </Button>
 
         {apiStatus && (
-          <div className="space-y-2">
-            <div className="p-3 bg-muted/50 rounded-lg">
-              <Label className="text-xs text-muted-foreground">Exchange Rate API</Label>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant={apiStatus.exchangeRates === 'OK' ? "default" : "destructive"}>
-                  {apiStatus.exchangeRates}
-                </Badge>
-                {apiStatus.exchangeRates === 'OK' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
-              </div>
-            </div>
-            {apiStatus.ratesData && (
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <Label className="text-xs text-muted-foreground">Live Rates</Label>
-                <pre className="text-xs mt-2 overflow-auto">
-                  {JSON.stringify(apiStatus.ratesData.rates, null, 2)}
-                </pre>
+          <div className="space-y-3">
+            {/* Exchange Rate APIs */}
+            {apiStatus.integrations.exchangeRates && (
+              <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                <Label className="font-semibold">Exchange Rate APIs</Label>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">ExchangeRate-API (Primary)</span>
+                  <Badge variant={apiStatus.integrations.exchangeRates.primary.status === 'OK' ? "default" : "destructive"}>
+                    {apiStatus.integrations.exchangeRates.primary.status} - {apiStatus.integrations.exchangeRates.primary.currencies} currencies
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">FreeCurrencyAPI (Backup)</span>
+                  <Badge variant={apiStatus.integrations.exchangeRates.backup.status === 'OK' ? "default" : "destructive"}>
+                    {apiStatus.integrations.exchangeRates.backup.status} - {apiStatus.integrations.exchangeRates.backup.currencies} currencies
+                  </Badge>
+                </div>
               </div>
             )}
+
+            {/* Stripe Status */}
+            {apiStatus.integrations.stripe && (
+              <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                <Label className="font-semibold">Stripe Payment Processing</Label>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Configuration</span>
+                  <Badge variant={apiStatus.integrations.stripe.configured ? "default" : "secondary"}>
+                    {apiStatus.integrations.stripe.configured ? 'Configured' : 'Not Configured'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Status</span>
+                  <Badge variant={apiStatus.integrations.stripe.ready ? "default" : "secondary"}>
+                    {apiStatus.integrations.stripe.ready ? 'Ready' : 'Not Ready'}
+                  </Badge>
+                </div>
+              </div>
+            )}
+
+            {/* Didit KYC Status */}
+            {apiStatus.integrations.didit && (
+              <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                <Label className="font-semibold">Didit KYC Integration</Label>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Configuration</span>
+                  <Badge variant={apiStatus.integrations.didit.configured ? "default" : "secondary"}>
+                    {apiStatus.integrations.didit.configured ? 'Configured' : 'Not Configured'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Status</span>
+                  <Badge variant={apiStatus.integrations.didit.ready ? "default" : "secondary"}>
+                    {apiStatus.integrations.didit.ready ? 'Ready' : 'Not Ready'}
+                  </Badge>
+                </div>
+              </div>
+            )}
+
+            {/* Smart Contracts Status */}
+            {apiStatus.integrations.smartContracts && (
+              <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                <Label className="font-semibold">Smart Contracts (Polkadot Paseo)</Label>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Deployment</span>
+                  <Badge variant={apiStatus.integrations.smartContracts.configured ? "default" : "destructive"}>
+                    {apiStatus.integrations.smartContracts.configured ? 'All Deployed' : 'Missing'}
+                  </Badge>
+                </div>
+                {apiStatus.integrations.smartContracts.addresses && (
+                  <div className="mt-2 space-y-1">
+                    {Object.entries(apiStatus.integrations.smartContracts.addresses).map(([name, address]: any) => (
+                      <div key={name} className="text-xs">
+                        <span className="text-muted-foreground">{name}:</span>{' '}
+                        <code className="bg-background/50 px-1 rounded">{address}</code>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Live Exchange Rates */}
+            {apiStatus.exchangeRates?.data?.rates && (
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <Label className="font-semibold mb-2 block">Current Live Rates</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {Object.entries(apiStatus.exchangeRates.data.rates).map(([currency, rate]: any) => (
+                    <div key={currency} className="text-sm">
+                      <span className="font-semibold">{currency}:</span> {rate.toFixed(4)}
+                    </div>
+                  ))}
+                </div>
+                <div className="text-xs text-muted-foreground mt-2">
+                  Last updated: {new Date(apiStatus.exchangeRates.data.timestamp).toLocaleTimeString()}
+                </div>
+              </div>
+            )}
+
+            {/* Summary */}
+            <Alert className="bg-primary/10 border-primary/20">
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+              <AlertDescription>
+                <strong>Integration Status: </strong>
+                {apiStatus.integrations ? 'All systems operational' : 'Some services unavailable'}
+              </AlertDescription>
+            </Alert>
           </div>
         )}
       </CardContent>
