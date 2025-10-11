@@ -74,9 +74,8 @@ export function useSavings() {
     const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.savingsPool,
       abi: ABIS.savingsPool,
-      functionName: 'deposit',
+      functionName: 'depositToSavings',
       args: [currency, amountWei],
-      value: amountWei,
     })
 
     return hash
