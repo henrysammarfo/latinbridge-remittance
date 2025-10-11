@@ -46,7 +46,7 @@ export function useRemittance() {
     const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.remittanceVault,
       abi: ABIS.remittanceVault,
-      functionName: 'deposit',
+      functionName: 'depositFunds',
       args: [currency, amountWei],
       value: amountWei, // Send PAS tokens
     })

@@ -31,16 +31,14 @@ export function useLoans() {
 
   /**
    * Check loan eligibility
+   * NOTE: For testnet, we allow all users to be eligible
+   * In production, this would check KYC status and credit score
    */
-  const { data: isEligible, refetch: refetchEligibility } = useReadContract({
-    address: CONTRACT_ADDRESSES.microloanManager,
-    abi: ABIS.microloanManager,
-    functionName: 'checkEligibility',
-    args: address ? [address] : undefined,
-    query: {
-      enabled: !!address,
-    },
-  })
+  const isEligible = !!address // All connected users are eligible on testnet
+  
+  const refetchEligibility = () => {
+    // No-op for testnet
+  }
 
   /**
    * Get interest rate based on credit score
@@ -114,7 +112,7 @@ export function useLoans() {
 
   return {
     // Data
-    isEligible: !!isEligible,
+    isEligible,
 
     // Hooks
     useActiveLoan,
