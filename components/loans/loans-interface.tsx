@@ -12,14 +12,13 @@ import { useToast } from "@/hooks/use-toast"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-
-// Admin wallet address for loan repayments
-const ADMIN_REPAYMENT_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_WALLET || "0x..."
+import { useAdmin } from "@/lib/hooks/useAdmin"
 
 export function LoansInterface() {
   const { toast } = useToast()
   const { address, isConnected } = useAccount()
   const { isEligible, useActiveLoan, repayLoan, useInterestRate } = useLoans()
+  const { adminAddress } = useAdmin()
 
   const [showApplicationModal, setShowApplicationModal] = useState(false)
   const [isRepaying, setIsRepaying] = useState(false)
@@ -223,7 +222,7 @@ export function LoansInterface() {
                     </p>
                     <div className="flex gap-2 mt-2">
                       <Input 
-                        value={ADMIN_REPAYMENT_ADDRESS}
+                        value={adminAddress}
                         readOnly 
                         className="font-mono text-xs bg-background"
                       />
@@ -231,7 +230,7 @@ export function LoansInterface() {
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          navigator.clipboard.writeText(ADMIN_REPAYMENT_ADDRESS)
+                          navigator.clipboard.writeText(adminAddress)
                           toast({ title: "Address copied!", description: "Admin repayment address copied to clipboard" })
                         }}
                       >

@@ -6,16 +6,20 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useAccount } from "wagmi"
 import { useToast } from "@/hooks/use-toast"
-import { CheckCircle2, Send, ExternalLink, Copy, AlertCircle } from "lucide-react"
+import { CheckCircle2, Send, ExternalLink, Copy, AlertCircle, ShieldAlert } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useAdmin } from "@/lib/hooks/useAdmin"
+import { useRouter } from "next/navigation"
 
 // This is the admin wallet address that receives loan repayments
-const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET || "0x..."
+const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET || "0x2F914bcbAD5bf4967BbB11e4372200b7c7594AEB"
 
 export default function AdminLoansPage() {
   const { address, isConnected } = useAccount()
+  const { isAdmin } = useAdmin()
   const { toast } = useToast()
+  const router = useRouter()
   const [loans, setLoans] = useState<any[]>([])
   const [fundedLoans, setFundedLoans] = useState<Set<number>>(new Set())
 
@@ -68,6 +72,18 @@ export default function AdminLoansPage() {
     window.open(`https://blockscout-passet-hub.parity-testnet.parity.io/address/${addr}`, '_blank')
   }
 
+  // Redirect non-admin users
+  useEffect(() => {
+    if (isConnected && !isAdmin) {
+      toast({
+        title: "Access Denied",
+        description: "Only administrators can access this page",
+        variant: "destructive"
+      })
+      router.push('/dashboard')
+    }
+  }, [isConnected, isAdmin, router, toast])
+
   if (!isConnected) {
     return (
       <div className="container mx-auto p-6">
@@ -78,6 +94,25 @@ export default function AdminLoansPage() {
             <p className="text-sm text-muted-foreground">
               Please connect your admin wallet to manage loans
             </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card className="border-destructive">
+          <CardContent className="p-12 text-center">
+            <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2 text-destructive">Access Denied</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Only administrators can access the loan management panel
+            </p>
+            <Button onClick={() => router.push('/dashboard')}>
+              Return to Dashboard
+            </Button>
           </CardContent>
         </Card>
       </div>
