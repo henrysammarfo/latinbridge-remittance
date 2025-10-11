@@ -1,142 +1,244 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { CreditCard, Building2, Wallet, ArrowRight } from "lucide-react"
-
-const paymentMethods = [
-  {
-    id: "card",
-    name: "Credit/Debit Card",
-    icon: CreditCard,
-    description: "Instant deposit with 2% fee",
-    fee: "2%",
-  },
-  {
-    id: "bank",
-    name: "Bank Transfer",
-    icon: Building2,
-    description: "Free, arrives in 1-3 business days",
-    fee: "Free",
-  },
-  {
-    id: "crypto",
-    name: "Cryptocurrency",
-    icon: Wallet,
-    description: "Instant deposit with 1% fee",
-    fee: "1%",
-  },
-]
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { ExternalLink, Wallet, Info, CheckCircle2, CreditCard, Building2, ArrowRight } from "lucide-react"
+import { useAccount } from "wagmi"
+import { useState } from "react"
 
 export function AddMoneyInterface() {
-  const [amount, setAmount] = useState("")
-  const [currency, setCurrency] = useState("USD")
-  const [paymentMethod, setPaymentMethod] = useState("card")
+  const { address, isConnected } = useAccount()
+  const [copied, setCopied] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("[v0] Add money:", { amount, currency, paymentMethod })
-    // Handle add money logic
+  const handleCopyAddress = () => {
+    if (address) {
+      navigator.clipboard.writeText(address)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Add Money to Wallet</CardTitle>
-        <CardDescription>Choose your payment method and amount</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount</Label>
-            <div className="flex gap-2">
-              <Input
-                id="amount"
-                type="number"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="flex-1"
-                min="1"
-                step="0.01"
-                required
-              />
-              <select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                className="px-4 py-2 border rounded-md bg-background"
-              >
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-                <option value="GBP">GBP</option>
-              </select>
-            </div>
+    <div className="space-y-6">
+      {/* Testnet Method - Primary */}
+      <Card className="border-primary/50">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Wallet className="h-5 w-5 text-primary" />
+            <CardTitle>Testnet: Get Free PAS Tokens</CardTitle>
           </div>
+          <CardDescription>
+            For testing LatinBridge on Polkadot Paseo testnet
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle>How It Works</AlertTitle>
+            <AlertDescription>
+              PAS tokens are free testnet tokens that represent value for testing.
+              Use them just like real money to test all LatinBridge features:
+              sending, receiving, savings, and loans.
+            </AlertDescription>
+          </Alert>
 
-          <div className="space-y-4">
-            <Label>Payment Method</Label>
-            <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-              {paymentMethods.map((method) => (
-                <div
-                  key={method.id}
-                  className="flex items-center space-x-3 border rounded-lg p-4 hover:bg-muted/50 transition-colors"
-                >
-                  <RadioGroupItem value={method.id} id={method.id} />
-                  <Label htmlFor={method.id} className="flex-1 cursor-pointer">
-                    <div className="flex items-start gap-3">
-                      <method.icon className="h-5 w-5 mt-0.5 text-primary" />
-                      <div className="flex-1">
-                        <div className="font-medium">{method.name}</div>
-                        <div className="text-sm text-muted-foreground">{method.description}</div>
-                      </div>
-                      <div className="text-sm font-medium text-primary">{method.fee}</div>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+              <div>
+                <div className="font-medium">Step 1: Copy Your Wallet Address</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  {isConnected && address ? (
+                    <div className="flex items-center gap-2 mt-2">
+                      <code className="text-xs bg-muted px-3 py-2 rounded">
+                        {address.slice(0, 20)}...{address.slice(-10)}
+                      </code>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={handleCopyAddress}
+                      >
+                        {copied ? "Copied!" : "Copy"}
+                      </Button>
                     </div>
-                  </Label>
+                  ) : (
+                    <span className="text-destructive">Please connect your wallet first</span>
+                  )}
                 </div>
-              ))}
-            </RadioGroup>
-          </div>
-
-          {amount && (
-            <div className="rounded-lg bg-muted p-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Amount</span>
-                <span className="font-medium">
-                  {currency} {amount}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Fee</span>
-                <span className="font-medium">
-                  {paymentMethod === "bank"
-                    ? "Free"
-                    : `${currency} ${(Number.parseFloat(amount) * (paymentMethod === "card" ? 0.02 : 0.01)).toFixed(2)}`}
-                </span>
-              </div>
-              <div className="border-t pt-2 flex justify-between font-semibold">
-                <span>Total</span>
-                <span>
-                  {currency}{" "}
-                  {paymentMethod === "bank"
-                    ? amount
-                    : (Number.parseFloat(amount) * (paymentMethod === "card" ? 1.02 : 1.01)).toFixed(2)}
-                </span>
               </div>
             </div>
-          )}
 
-          <Button type="submit" className="w-full" size="lg">
-            Continue to Payment
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+              <div>
+                <div className="font-medium">Step 2: Visit Polkadot Faucet</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Go to the official faucet and request PAS tokens
+                </div>
+                <Button 
+                  className="mt-2" 
+                  variant="outline"
+                  size="sm"
+                  asChild
+                >
+                  <a 
+                    href="https://faucet.polkadot.io" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    Open Faucet
+                    <ExternalLink className="ml-2 h-3 w-3" />
+                  </a>
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+              <div>
+                <div className="font-medium">Step 3: Select Polkadot Paseo Asset Hub</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Choose "Polkadot Asset Hub Paseo" from the network dropdown
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+              <div>
+                <div className="font-medium">Step 4: Paste Your Address & Request Tokens</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Paste your wallet address and click "Send me tokens"
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+              <div>
+                <div className="font-medium">Step 5: Start Testing!</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Tokens arrive in ~30 seconds. Refresh your dashboard to see them.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+            <div className="font-medium">What You Can Do:</div>
+            <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+              <li>• Send PAS tokens to any address</li>
+              <li>• Receive PAS tokens via QR code</li>
+              <li>• Deposit into savings (earn 5% APY)</li>
+              <li>• Apply for microloans</li>
+              <li>• Exchange between currencies</li>
+              <li>• All transactions are real and on-chain!</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Production Methods - Coming Soon */}
+      <Card className="border-muted">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Production: Real Money (Mainnet Only)
+          </CardTitle>
+          <CardDescription>
+            These payment methods are integrated but require mainnet deployment
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              The following payment methods are fully coded and integrated with Stripe,
+              but cannot be tested on the Polkadot Paseo testnet. They will work when
+              deployed to mainnet.
+            </AlertDescription>
+          </Alert>
+
+          <div className="space-y-3 opacity-60">
+            <div className="border rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <CreditCard className="h-5 w-5" />
+                <div>
+                  <div className="font-medium">Credit/Debit Card</div>
+                  <div className="text-sm text-muted-foreground">
+                    Instant deposit via Stripe • 2% fee
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="border rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <Building2 className="h-5 w-5" />
+                <div>
+                  <div className="font-medium">Bank Transfer</div>
+                  <div className="text-sm text-muted-foreground">
+                    ACH/Wire transfer • Free • 1-3 business days
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="border rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <Wallet className="h-5 w-5" />
+                <div>
+                  <div className="font-medium">Cryptocurrency</div>
+                  <div className="text-sm text-muted-foreground">
+                    Deposit ETH, USDC, USDT • 1% fee • Instant
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-muted/30 rounded-lg p-4 text-sm text-muted-foreground">
+            <strong>Integration Status:</strong><br/>
+            ✅ Stripe API integrated (<code>lib/api/stripe.ts</code>)<br/>
+            ✅ Payment endpoints ready (<code>/api/payments/create-intent</code>)<br/>
+            ⏸️ Requires mainnet deployment to test with real cards/banks
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Quick Access Buttons */}
+      <div className="flex gap-3">
+        <Button 
+          className="flex-1" 
+          size="lg"
+          asChild
+        >
+          <a 
+            href="https://faucet.polkadot.io" 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            Get Free PAS Tokens
+            <ExternalLink className="ml-2 h-4 w-4" />
+          </a>
+        </Button>
+        <Button 
+          className="flex-1" 
+          variant="outline" 
+          size="lg"
+          asChild
+        >
+          <a 
+            href="https://blockscout-passet-hub.parity-testnet.parity.io" 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            View on Explorer
+            <ExternalLink className="ml-2 h-4 w-4" />
+          </a>
+        </Button>
+      </div>
+    </div>
   )
 }
