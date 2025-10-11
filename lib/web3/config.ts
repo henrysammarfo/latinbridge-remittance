@@ -33,14 +33,18 @@ export const wagmiConfig = createConfig({
   chains: [polkadotPaseo],
   connectors: [
     injected({
-      target: 'metaMask',
+      target: () => ({
+        id: 'metaMask',
+        name: 'MetaMask',
+        provider: typeof window !== 'undefined' ? window.ethereum : undefined,
+      }),
       shimDisconnect: true,
     }),
   ],
   transports: {
     [polkadotPaseo.id]: http(),
   },
-  ssr: true,
+  ssr: false, // Disable SSR for wagmi to avoid hydration issues
   multiInjectedProviderDiscovery: false,
 })
 
