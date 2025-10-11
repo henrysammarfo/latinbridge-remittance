@@ -45,9 +45,15 @@ export default function LoginPage() {
 
   const handleConnect = async () => {
     try {
-      const injectedConnector = connectors.find(c => c.id === 'injected')
+      // Safety check: ensure connectors is an array
+      const connectorsList = Array.isArray(connectors) ? connectors : []
+      const injectedConnector = connectorsList.find(c => c?.id === 'injected')
+
       if (injectedConnector) {
         await connect({ connector: injectedConnector })
+      } else if (connectorsList.length > 0) {
+        // Fallback: use first available connector
+        await connect({ connector: connectorsList[0] })
       }
     } catch (err) {
       console.error('Connection error:', err)
