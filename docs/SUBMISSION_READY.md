@@ -29,12 +29,11 @@
 
 | Contract | Address | Status |
 |----------|---------|--------|
-| UserRegistry | `0xfba199c705761D98aD1cD98c34C0d544e39c1984` | ✅ Live |
-| ExchangeRateOracle | `0x8c73284b55cb55EB46Dd42617bA6213037e602e9` | ✅ Live |
-| RemittanceVault | `0x24d591Aa216E5466D5381139bc8feC2A91e707DB` | ✅ Live |
-| SavingsPool | `0xfD2CFC86e06c54d1ffe9B503391d91452a8Fd02D` | ✅ Live |
-| MicroloanManager | `0x2ABa80F8931d52DEE8e6732d213eabe795535660` | ✅ Live |
-| PaymentNetworks | `0x5D3235c4eB39f5c3729e75932D62E40f77D8e70f` | ✅ Live |
+| UserRegistry | `0x834244e7f0C652F2c1B248D1e1882D66a86BC22a` | ✅ Live |
+| ExchangeRateOracle | `0x6C27674247e791fc1c0bDE7e728F93FAc19A0960` | ✅ Live |
+| RemittanceVault | `0xd74D658Bf407AB23Db6d00cc67574724956838B2` | ✅ Live |
+| SavingsPool | `0x7716BD6c58F5efc3472dC7B0F5ee3D4f14A8cc6f` | ✅ Live |
+| MicroloanManager | `0x52C9ac1bEd4369f5723F9E176341704Ac4C81034` | ✅ Live |
 
 **Verify on Explorer**: https://blockscout-passet-hub.parity-testnet.parity.io
 
