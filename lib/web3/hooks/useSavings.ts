@@ -92,7 +92,7 @@ export function useSavings() {
     const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.savingsPool,
       abi: ABIS.savingsPool,
-      functionName: 'withdraw',
+      functionName: 'withdrawFromSavings',
       args: [currency, amountWei],
     })
 

@@ -18,13 +18,11 @@ interface WithdrawModalProps {
 }
 
 export function WithdrawModal({ open, onClose, onSuccess }: WithdrawModalProps) {
-  const { withdraw } = useSavings()
+  const { withdraw, useBalance } = useSavings()
   const { toast } = useToast()
   const [amount, setAmount] = useState("")
   const [currency, setCurrency] = useState("USD")
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const availableBalance = 2000.0 // TODO: Get from contract
 
   const getCurrencyEnum = (currencyCode: string): Currency => {
     switch (currencyCode) {
@@ -38,6 +36,10 @@ export function WithdrawModal({ open, onClose, onSuccess }: WithdrawModalProps) 
     }
   }
 
+  const currencyEnum = getCurrencyEnum(currency)
+  const { balance } = useBalance(currencyEnum)
+  const availableBalance = parseFloat(balance || '0')
+
   const handleWithdraw = async () => {
     if (!amount || parseFloat(amount) <= 0) return
 
@@ -49,7 +51,6 @@ export function WithdrawModal({ open, onClose, onSuccess }: WithdrawModalProps) 
         description: "Please confirm the transaction in your wallet"
       })
 
-      const currencyEnum = getCurrencyEnum(currency)
       await withdraw(currencyEnum, amount)
 
       toast({
