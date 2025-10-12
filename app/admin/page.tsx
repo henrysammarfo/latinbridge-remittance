@@ -1,9 +1,10 @@
 "use client"
 
+
 import { useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useAdmin } from "@/lib/hooks/useAdmin"
+import { useAdminCheck } from "@/lib/hooks/useAdminCheck"
 import { useRouter } from "next/navigation"
 import { useAccount } from "wagmi"
 import { ShieldAlert, Shield, ArrowRight } from "lucide-react"
@@ -12,7 +13,7 @@ import Link from "next/link"
 
 export default function AdminPage() {
   const { isConnected } = useAccount()
-  const { isAdmin } = useAdmin()
+  const { isAdmin } = useAdminCheck()
   const router = useRouter()
   const { toast } = useToast()
 
@@ -85,6 +86,25 @@ export default function AdminPage() {
                   </p>
                   <div className="flex items-center text-primary text-sm font-medium">
                     Manage Loans <ArrowRight className="h-4 w-4 ml-1" />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        {/* Platform Reserves */}
+        <Link href="/admin/reserves">
+          <Card className="hover:border-primary transition-colors cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Platform Reserves</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Manage platform reserves for funding loans and savings operations
+                  </p>
+                  <div className="flex items-center text-primary text-sm font-medium">
+                    Manage Reserves <ArrowRight className="h-4 w-4 ml-1" />
                   </div>
                 </div>
               </div>

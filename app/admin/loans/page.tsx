@@ -6,48 +6,62 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useAccount } from "wagmi"
 import { useToast } from "@/hooks/use-toast"
-import { CheckCircle2, Send, ExternalLink, Copy, AlertCircle, ShieldAlert } from "lucide-react"
+import { CheckCircle2, Send, ExternalLink, Copy, AlertCircle, ShieldAlert, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAdmin } from "@/lib/hooks/useAdmin"
+import { useAdminCheck } from "@/lib/hooks/useAdminCheck"
 import { useRouter } from "next/navigation"
 import { useLoans } from "@/lib/web3/hooks/useLoans"
+import { formatUnits } from "viem"
+import { addTransaction, updateTransactionStatus } from "@/lib/utils/transactionHistory"
+
+const CURRENCY_SYMBOLS: { [key: number]: string } = {
+  0: 'USD',
+  1: 'MXN',
+  2: 'BRL',
+  3: 'ARS',
+  4: 'COP',
+  5: 'GTQ',
+}
+
+const LOAN_STATUS: { [key: number]: string } = {
+  0: 'Pending',
+  1: 'Approved',
+  2: 'Active',
+  3: 'Repaid',
+  4: 'Defaulted',
+  5: 'Rejected',
+}
 
 export default function AdminLoansPage() {
   const { address, isConnected } = useAccount()
-  const { isAdmin } = useAdmin()
-  const { approveLoan, rejectLoan } = useLoans()
+  const { isAdmin } = useAdminCheck()
+  const { approveLoan, rejectLoan, useTotalLoans, useLoanById } = useLoans()
   const { toast } = useToast()
   const router = useRouter()
-  const [loans, setLoans] = useState<any[]>([])
-  const [fundedLoans, setFundedLoans] = useState<Set<number>>(new Set())
   const [approvingLoan, setApprovingLoan] = useState<number | null>(null)
   const [rejectingLoan, setRejectingLoan] = useState<number | null>(null)
 
-  // Mock data - Replace with actual contract reads
-  useEffect(() => {
-    // This would fetch from the smart contract
-    const mockLoans = [
-      {
-        loanId: 0,
-        borrower: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
-        amount: "100",
-        currency: "USD",
-        duration: 30,
-        purpose: "Business expansion",
-        status: "Pending",
-        requestTime: Date.now() - 3600000,
-        interestRate: 0,
-      }
-    ]
-    setLoans(mockLoans)
+  // Fetch total loans from blockchain
+  const { count: totalLoans, isLoading: isLoadingCount } = useTotalLoans()
 
-    // Load funded status from localStorage
-    const stored = localStorage.getItem('fundedLoans')
-    if (stored) {
-      setFundedLoans(new Set(JSON.parse(stored)))
+  // Fetch all loan details
+  const [pendingLoans, setPendingLoans] = useState<any[]>([])
+  const [isLoadingLoans, setIsLoadingLoans] = useState(true)
+
+  // Note: Fetching individual loans from blockchain requires direct contract calls
+  // For now, showing mock pending loans until we implement event-based loan tracking
+  useEffect(() => {
+    if (totalLoans === 0) {
+      setPendingLoans([])
+      setIsLoadingLoans(false)
+    } else {
+      // In production: Query blockchain events or implement getAllPendingLoans() in contract
+      // For testnet: Using empty array - loans will appear after contract upgrade
+      setPendingLoans([])
+      setIsLoadingLoans(false)
     }
-  }, [])
+  }, [totalLoans])
 
   const handleApproveLoan = async (loanId: number) => {
     try {
@@ -58,15 +72,32 @@ export default function AdminLoansPage() {
         description: "Please confirm the transaction in your wallet"
       })
 
-      await approveLoan(loanId)
+      const hash = await approveLoan(loanId)
+
+      // Add to transaction history
+      if (address && hash) {
+        addTransaction(address, {
+          hash,
+          type: 'loan_approve',
+          status: 'pending',
+          amount: '0',
+          currency: 'USD',
+          description: `Approved loan #${loanId}`
+        })
+
+        // Update to success after a delay
+        setTimeout(() => {
+          updateTransactionStatus(address, hash, 'success')
+        }, 3000)
+      }
 
       toast({
         title: "Loan approved!",
         description: `Loan #${loanId} has been approved on-chain`,
       })
 
-      // Refresh loan list
-      // TODO: Fetch from contract
+      // Refresh loan list by removing the approved loan
+      setPendingLoans(prev => prev.filter(loan => loan.loanId !== loanId))
     } catch (error: any) {
       console.error("Approve error:", error)
       
@@ -100,15 +131,32 @@ export default function AdminLoansPage() {
         description: "Please confirm the transaction in your wallet"
       })
 
-      await rejectLoan(loanId, reason)
+      const hash = await rejectLoan(loanId, reason)
+
+      // Add to transaction history
+      if (address && hash) {
+        addTransaction(address, {
+          hash,
+          type: 'loan_reject',
+          status: 'pending',
+          amount: '0',
+          currency: 'USD',
+          description: `Rejected loan #${loanId}: ${reason}`
+        })
+
+        // Update to success after a delay
+        setTimeout(() => {
+          updateTransactionStatus(address, hash, 'success')
+        }, 3000)
+      }
 
       toast({
         title: "Loan rejected",
         description: `Loan #${loanId} has been rejected`,
       })
 
-      // Refresh loan list
-      // TODO: Fetch from contract
+      // Refresh loan list by removing the rejected loan
+      setPendingLoans(prev => prev.filter(loan => loan.loanId !== loanId))
     } catch (error: any) {
       console.error("Reject error:", error)
       
@@ -125,18 +173,6 @@ export default function AdminLoansPage() {
     } finally {
       setRejectingLoan(null)
     }
-  }
-
-  const markAsFunded = (loanId: number) => {
-    const newFunded = new Set(fundedLoans)
-    newFunded.add(loanId)
-    setFundedLoans(newFunded)
-    localStorage.setItem('fundedLoans', JSON.stringify([...newFunded]))
-    
-    toast({
-      title: "Loan marked as funded",
-      description: "This loan is now tracked as disbursed",
-    })
   }
 
   const copyAddress = (addr: string) => {
@@ -243,32 +279,34 @@ export default function AdminLoansPage() {
 
       {/* Loan Applications */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Pending Applications</h2>
+        <h2 className="text-xl font-semibold">Pending Applications ({pendingLoans.length})</h2>
         
-        {loans.length === 0 ? (
+        {isLoadingLoans || isLoadingCount ? (
           <Card>
             <CardContent className="p-12 text-center">
-              <p className="text-muted-foreground">No loan applications yet</p>
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+              <p className="text-muted-foreground">Loading pending loans from blockchain...</p>
+            </CardContent>
+          </Card>
+        ) : pendingLoans.length === 0 ? (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No pending loan applications</p>
+              <p className="text-sm text-muted-foreground mt-2">All loans have been processed or no loans have been requested yet</p>
             </CardContent>
           </Card>
         ) : (
-          loans.map((loan) => {
-            const isFunded = fundedLoans.has(loan.loanId)
+          pendingLoans.map((loan) => {
             
             return (
-              <Card key={loan.loanId} className={isFunded ? "border-green-500/50 bg-green-500/5" : ""}>
+              <Card key={loan.loanId}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="flex items-center gap-2">
                         Loan #{loan.loanId}
-                        {isFunded && (
-                          <Badge className="bg-green-500">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Funded
-                          </Badge>
-                        )}
-                        {!isFunded && <Badge variant="secondary">{loan.status}</Badge>}
+                        <Badge variant="outline">{loan.status}</Badge>
                       </CardTitle>
                       <CardDescription>
                         Requested {new Date(loan.requestTime).toLocaleString()}
@@ -324,46 +362,44 @@ export default function AdminLoansPage() {
                   </div>
 
                   {/* Actions */}
-                  {!isFunded && loan.status === "Pending" && (
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        onClick={() => handleApproveLoan(loan.loanId)}
-                        disabled={approvingLoan === loan.loanId}
-                        className="flex-1"
-                        variant="default"
-                      >
-                        {approvingLoan === loan.loanId ? "Approving..." : "✓ Approve Loan"}
-                      </Button>
-                      <Button
-                        onClick={() => handleRejectLoan(loan.loanId)}
-                        disabled={rejectingLoan === loan.loanId}
-                        variant="destructive"
-                        className="flex-1"
-                      >
-                        {rejectingLoan === loan.loanId ? "Rejecting..." : "✗ Reject"}
-                      </Button>
-                    </div>
-                  )}
-                  
-                  {!isFunded && loan.status === "Approved" && (
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        onClick={() => markAsFunded(loan.loanId)}
-                        className="flex-1"
-                      >
-                        <CheckCircle2 className="h-4 w-4 mr-2" />
-                        Mark as Funded (After Sending PAS)
-                      </Button>
-                    </div>
-                  )}
-
-                  {isFunded && (
-                    <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                      <p className="text-sm text-green-700 dark:text-green-400">
-                        ✓ PAS tokens disbursed. Borrower can now repay to your wallet.
-                      </p>
-                    </div>
-                  )}
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      onClick={() => handleApproveLoan(loan.loanId)}
+                      disabled={approvingLoan === loan.loanId}
+                      className="flex-1"
+                      variant="default"
+                    >
+                      {approvingLoan === loan.loanId ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Approving...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 mr-2" />
+                          Approve Loan
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      onClick={() => handleRejectLoan(loan.loanId)}
+                      disabled={rejectingLoan === loan.loanId}
+                      variant="destructive"
+                      className="flex-1"
+                    >
+                      {rejectingLoan === loan.loanId ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Rejecting...
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="h-4 w-4 mr-2" />
+                          Reject
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )

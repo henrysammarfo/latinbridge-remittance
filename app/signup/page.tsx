@@ -3,6 +3,7 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+
 export default function SignupPage() {
   return (
     <div className="min-h-screen flex flex-col">

@@ -1,6 +1,7 @@
 import { DashboardNav } from "@/components/dashboard/dashboard-nav"
 import { AddMoneyInterface } from "@/components/add-money/add-money-interface"
 
+
 export default function AddMoneyPage() {
   return (
     <div className="min-h-screen bg-background">

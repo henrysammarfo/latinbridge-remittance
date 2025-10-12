@@ -10,6 +10,8 @@ import { useSavings } from "@/lib/web3/hooks/useSavings"
 import { Currency } from "@/lib/web3/hooks/useContracts"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
+import { useAccount } from "wagmi"
+import { addTransaction, updateTransactionStatus } from "@/lib/utils/transactionHistory"
 
 interface DepositModalProps {
   open: boolean
@@ -20,6 +22,7 @@ interface DepositModalProps {
 export function DepositModal({ open, onClose, onSuccess }: DepositModalProps) {
   const { deposit } = useSavings()
   const { toast } = useToast()
+  const { address } = useAccount()
   const [amount, setAmount] = useState("")
   const [currency, setCurrency] = useState("USD")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -48,12 +51,32 @@ export function DepositModal({ open, onClose, onSuccess }: DepositModalProps) {
       })
 
       const currencyEnum = getCurrencyEnum(currency)
-      await deposit(currencyEnum, amount)
+      const hash = await deposit(currencyEnum, amount)
+
+      // Add to transaction history
+      if (address && hash) {
+        addTransaction(address, {
+          hash,
+          type: 'savings_deposit',
+          status: 'pending',
+          amount,
+          currency,
+          description: `Deposited ${amount} ${currency} to savings`
+        })
+
+        // Update to success after a delay
+        setTimeout(() => {
+          updateTransactionStatus(address, hash, 'success')
+        }, 3000)
+      }
 
       toast({
         title: "Deposit successful!",
         description: `${amount} ${currency} deposited to savings`
       })
+
+      // Trigger balance refresh
+      window.dispatchEvent(new Event('balanceUpdate'))
 
       if (onSuccess) onSuccess()
       setAmount("")

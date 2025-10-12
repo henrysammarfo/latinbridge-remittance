@@ -30,6 +30,68 @@ export function useLoans() {
   }
 
   /**
+   * Get all loans for a user
+   */
+  const useUserLoans = () => {
+    const { data: loanIds, isLoading, refetch } = useReadContract({
+      address: CONTRACT_ADDRESSES.microloanManager,
+      abi: ABIS.microloanManager,
+      functionName: 'getUserLoans',
+      args: address ? [address] : undefined,
+      query: {
+        enabled: !!address,
+      },
+    })
+
+    return {
+      loanIds: (loanIds as bigint[]) || [],
+      isLoading,
+      refetch,
+    }
+  }
+
+  /**
+   * Get loan details by ID (using public loans array)
+   */
+  const useLoanById = (loanId: bigint | number) => {
+    const { data: loan, isLoading, refetch } = useReadContract({
+      address: CONTRACT_ADDRESSES.microloanManager,
+      abi: ABIS.microloanManager,
+      functionName: 'loans',
+      args: [BigInt(loanId)],
+      query: {
+        enabled: true,
+      },
+    })
+
+    return {
+      loan: loan as any,
+      isLoading,
+      refetch,
+    }
+  }
+
+  /**
+   * Get total loans count
+   */
+  const useTotalLoans = () => {
+    const { data: count, isLoading, refetch } = useReadContract({
+      address: CONTRACT_ADDRESSES.microloanManager,
+      abi: ABIS.microloanManager,
+      functionName: 'getTotalLoans',
+      query: {
+        enabled: true,
+      },
+    })
+
+    return {
+      count: count ? Number(count) : 0,
+      isLoading,
+      refetch,
+    }
+  }
+
+  /**
    * Check loan eligibility
    * NOTE: For testnet, we allow all users to be eligible
    * In production, this would check KYC status and credit score
@@ -153,6 +215,9 @@ export function useLoans() {
 
     // Hooks
     useActiveLoan,
+    useUserLoans,
+    useLoanById,
+    useTotalLoans,
     useInterestRate,
 
     // Actions

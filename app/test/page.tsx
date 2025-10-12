@@ -2,6 +2,7 @@ import { DashboardNav } from "@/components/dashboard/dashboard-nav"
 import { EnhancedTestPlatform } from "@/components/test/enhanced-test-platform"
 import { Metadata } from "next"
 
+
 export const metadata: Metadata = {
   title: "Test Platform - LatinBridge",
   description: "Smart contract testing interface for LATIN HACK 2025",

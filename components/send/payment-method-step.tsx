@@ -9,25 +9,30 @@ import type { SendMoneyData } from "./send-money-flow"
 
 const paymentMethods = [
   {
-    id: "card",
-    name: "Debit/Credit Card",
-    icon: CreditCard,
-    description: "Instant transfer • Visa, Mastercard",
-    fee: "Free",
-  },
-  {
-    id: "bank",
-    name: "Bank Account",
-    icon: Building2,
-    description: "ACH transfer • 1-2 business days",
-    fee: "Free",
-  },
-  {
     id: "wallet",
     name: "LatinBridge Wallet",
     icon: Wallet,
     description: "Instant • Use your balance",
     fee: "Free",
+    recommended: true,
+  },
+]
+
+// Disabled payment methods (for mainnet)
+const comingSoonMethods = [
+  {
+    id: "card",
+    name: "Debit/Credit Card",
+    icon: CreditCard,
+    description: "Coming on mainnet",
+    fee: "N/A",
+  },
+  {
+    id: "bank",
+    name: "Bank Account",
+    icon: Building2,
+    description: "Coming on mainnet",
+    fee: "N/A",
   },
 ]
 
@@ -45,7 +50,6 @@ export function PaymentMethodStep({ data, updateData, onNext, onBack }: PaymentM
     updateData({ paymentMethod: selectedMethod })
     onNext()
   }
-
   return (
     <Card className="border-border/50">
       <CardHeader>
@@ -57,18 +61,42 @@ export function PaymentMethodStep({ data, updateData, onNext, onBack }: PaymentM
             {paymentMethods.map((method) => (
               <label
                 key={method.id}
-                className="flex items-center gap-4 p-4 rounded-lg border cursor-pointer hover:bg-accent transition-colors"
+                className="flex items-center gap-4 p-4 rounded-lg border-2 border-primary bg-primary/5 cursor-pointer"
               >
-                <RadioGroupItem value={method.id} />
+                <RadioGroupItem value={method.id} checked={method.recommended} />
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                   <method.icon className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <div className="font-medium">{method.name}</div>
+                  <div className="font-medium flex items-center gap-2">
+                    {method.name}
+                    {method.recommended && (
+                      <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                        Recommended
+                      </span>
+                    )}
+                  </div>
                   <div className="text-sm text-muted-foreground">{method.description}</div>
                 </div>
                 <div className="text-sm font-medium text-primary">{method.fee}</div>
               </label>
+            ))}
+            
+            {comingSoonMethods.map((method) => (
+              <div
+                key={method.id}
+                className="flex items-center gap-4 p-4 rounded-lg border opacity-50 cursor-not-allowed"
+              >
+                <div className="h-4 w-4 rounded-full border-2 border-muted" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/10">
+                  <method.icon className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-muted-foreground">{method.name}</div>
+                  <div className="text-sm text-muted-foreground">{method.description}</div>
+                </div>
+                <div className="text-sm text-muted-foreground">{method.fee}</div>
+              </div>
             ))}
           </div>
         </RadioGroup>

@@ -1,6 +1,7 @@
 import { DashboardNav } from "@/components/dashboard/dashboard-nav"
 import { ReceiveMoneyInterface } from "@/components/receive/receive-money-interface"
 
+
 export default function ReceivePage() {
   return (
     <div className="min-h-screen bg-background">

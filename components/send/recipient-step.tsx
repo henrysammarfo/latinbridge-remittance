@@ -55,14 +55,13 @@ export function RecipientStep({ data, updateData, onNext }: RecipientStepProps) 
     }
     onNext()
   }
-
   return (
     <Card className="border-border/50">
       <CardHeader>
         <CardTitle>Select Recipient</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {!showNewRecipient ? (
+        {!showNewRecipient && savedRecipients.length > 0 ? (
           <>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -105,7 +104,21 @@ export function RecipientStep({ data, updateData, onNext }: RecipientStepProps) 
         ) : (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="walletAddress">Recipient Wallet Address <span className="text-destructive">*</span></Label>
+              <Input
+                id="walletAddress"
+                value={newRecipient.walletAddress}
+                onChange={(e) => setNewRecipient({ ...newRecipient, walletAddress: e.target.value })}
+                placeholder="0x1234567890abcdef..."
+                required
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter the recipient's LatinBridge wallet address (same as their MetaMask address)
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name (Optional)</Label>
               <Input
                 id="name"
                 value={newRecipient.name}
@@ -113,27 +126,29 @@ export function RecipientStep({ data, updateData, onNext }: RecipientStepProps) 
                 placeholder="John Doe"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={newRecipient.email}
-                onChange={(e) => setNewRecipient({ ...newRecipient, email: e.target.value })}
-                placeholder="john@example.com"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email (Optional)</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={newRecipient.email}
+                  onChange={(e) => setNewRecipient({ ...newRecipient, email: e.target.value })}
+                  placeholder="john@example.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone (Optional)</Label>
+                <Input
+                  id="phone"
+                  value={newRecipient.phone}
+                  onChange={(e) => setNewRecipient({ ...newRecipient, phone: e.target.value })}
+                  placeholder="+52 123 456 7890"
+                />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                value={newRecipient.phone}
-                onChange={(e) => setNewRecipient({ ...newRecipient, phone: e.target.value })}
-                placeholder="+1 (555) 000-0000"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="country">Country</Label>
+              <Label htmlFor="country">Country (Optional)</Label>
               <Input
                 id="country"
                 value={newRecipient.country}
@@ -141,24 +156,16 @@ export function RecipientStep({ data, updateData, onNext }: RecipientStepProps) 
                 placeholder="Mexico"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="walletAddress">Wallet Address</Label>
-              <Input
-                id="walletAddress"
-                value={newRecipient.walletAddress}
-                onChange={(e) => setNewRecipient({ ...newRecipient, walletAddress: e.target.value })}
-                placeholder="0x..."
-                required
-              />
-            </div>
-            <Button variant="outline" className="w-full bg-transparent" onClick={() => setShowNewRecipient(false)}>
-              Back to Saved Recipients
-            </Button>
+            {savedRecipients.length > 0 && (
+              <Button variant="outline" className="w-full bg-transparent" onClick={() => setShowNewRecipient(false)}>
+                Back to Saved Recipients
+              </Button>
+            )}
           </div>
         )}
 
         <div className="flex gap-3 pt-4 border-t">
-          <Button onClick={handleNext} disabled={!showNewRecipient && !selectedRecipient} className="flex-1">
+          <Button onClick={handleNext} disabled={!showNewRecipient && !selectedRecipient && !newRecipient.walletAddress} className="flex-1">
             Continue
           </Button>
         </div>
