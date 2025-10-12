@@ -111,6 +111,38 @@ export function useLoans() {
     return principal + interest
   }
 
+  /**
+   * Admin: Approve a loan
+   */
+  const approveLoan = async (loanId: number) => {
+    if (!address) throw new Error('No wallet connected')
+
+    const hash = await writeContractAsync({
+      address: CONTRACT_ADDRESSES.microloanManager,
+      abi: ABIS.microloanManager,
+      functionName: 'approveLoan',
+      args: [BigInt(loanId)],
+    })
+
+    return hash
+  }
+
+  /**
+   * Admin: Reject a loan
+   */
+  const rejectLoan = async (loanId: number, reason: string) => {
+    if (!address) throw new Error('No wallet connected')
+
+    const hash = await writeContractAsync({
+      address: CONTRACT_ADDRESSES.microloanManager,
+      abi: ABIS.microloanManager,
+      functionName: 'rejectLoan',
+      args: [BigInt(loanId), reason],
+    })
+
+    return hash
+  }
+
   return {
     // Data
     isEligible,
@@ -122,6 +154,8 @@ export function useLoans() {
     // Actions
     applyForLoan,
     repayLoan,
+    approveLoan,
+    rejectLoan,
 
     // Utilities
     calculateRepayment,

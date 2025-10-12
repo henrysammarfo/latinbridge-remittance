@@ -6,21 +6,79 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useSavings } from "@/lib/web3/hooks/useSavings"
+import { Currency } from "@/lib/web3/hooks/useContracts"
+import { useToast } from "@/hooks/use-toast"
+import { Loader2 } from "lucide-react"
 
 interface WithdrawModalProps {
   open: boolean
   onClose: () => void
+  onSuccess?: () => void
 }
 
-export function WithdrawModal({ open, onClose }: WithdrawModalProps) {
+export function WithdrawModal({ open, onClose, onSuccess }: WithdrawModalProps) {
+  const { withdraw } = useSavings()
+  const { toast } = useToast()
   const [amount, setAmount] = useState("")
   const [currency, setCurrency] = useState("USD")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const availableBalance = 2000.0
+  const availableBalance = 2000.0 // TODO: Get from contract
 
-  const handleWithdraw = () => {
-    // Handle withdraw logic
-    onClose()
+  const getCurrencyEnum = (currencyCode: string): Currency => {
+    switch (currencyCode) {
+      case 'USD': return Currency.USD
+      case 'MXN': return Currency.MXN
+      case 'BRL': return Currency.BRL
+      case 'ARS': return Currency.ARS
+      case 'COP': return Currency.COP
+      case 'GTQ': return Currency.GTQ
+      default: return Currency.USD
+    }
+  }
+
+  const handleWithdraw = async () => {
+    if (!amount || parseFloat(amount) <= 0) return
+
+    try {
+      setIsSubmitting(true)
+      
+      toast({
+        title: "Processing withdrawal...",
+        description: "Please confirm the transaction in your wallet"
+      })
+
+      const currencyEnum = getCurrencyEnum(currency)
+      await withdraw(currencyEnum, amount)
+
+      toast({
+        title: "Withdrawal successful!",
+        description: `${amount} ${currency} withdrawn from savings to your LatinBridge balance`
+      })
+
+      if (onSuccess) onSuccess()
+      setAmount("")
+      onClose()
+
+    } catch (error: any) {
+      console.error("Withdraw error:", error)
+
+      let errorMessage = "Failed to withdraw from savings"
+      if (error?.message?.includes("User rejected")) {
+        errorMessage = "Transaction rejected by user"
+      } else if (error?.message?.includes("insufficient")) {
+        errorMessage = "Insufficient balance in savings"
+      }
+
+      toast({
+        title: "Withdrawal failed",
+        description: errorMessage,
+        variant: "destructive"
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -71,15 +129,22 @@ export function WithdrawModal({ open, onClose }: WithdrawModalProps) {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline" onClick={onClose} className="flex-1 bg-transparent">
+            <Button variant="outline" onClick={onClose} className="flex-1 bg-transparent" disabled={isSubmitting}>
               Cancel
             </Button>
             <Button
               onClick={handleWithdraw}
-              disabled={!amount || Number.parseFloat(amount) <= 0 || Number.parseFloat(amount) > availableBalance}
+              disabled={!amount || Number.parseFloat(amount) <= 0 || Number.parseFloat(amount) > availableBalance || isSubmitting}
               className="flex-1"
             >
-              Withdraw
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Withdraw'
+              )}
             </Button>
           </div>
         </div>

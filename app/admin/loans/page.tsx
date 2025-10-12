@@ -11,14 +11,18 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAdmin } from "@/lib/hooks/useAdmin"
 import { useRouter } from "next/navigation"
+import { useLoans } from "@/lib/web3/hooks/useLoans"
 
 export default function AdminLoansPage() {
   const { address, isConnected } = useAccount()
   const { isAdmin } = useAdmin()
+  const { approveLoan, rejectLoan } = useLoans()
   const { toast } = useToast()
   const router = useRouter()
   const [loans, setLoans] = useState<any[]>([])
   const [fundedLoans, setFundedLoans] = useState<Set<number>>(new Set())
+  const [approvingLoan, setApprovingLoan] = useState<number | null>(null)
+  const [rejectingLoan, setRejectingLoan] = useState<number | null>(null)
 
   // Mock data - Replace with actual contract reads
   useEffect(() => {
@@ -44,6 +48,84 @@ export default function AdminLoansPage() {
       setFundedLoans(new Set(JSON.parse(stored)))
     }
   }, [])
+
+  const handleApproveLoan = async (loanId: number) => {
+    try {
+      setApprovingLoan(loanId)
+      
+      toast({
+        title: "Approving loan...",
+        description: "Please confirm the transaction in your wallet"
+      })
+
+      await approveLoan(loanId)
+
+      toast({
+        title: "Loan approved!",
+        description: `Loan #${loanId} has been approved on-chain`,
+      })
+
+      // Refresh loan list
+      // TODO: Fetch from contract
+    } catch (error: any) {
+      console.error("Approve error:", error)
+      
+      let errorMessage = "Failed to approve loan"
+      if (error?.message?.includes("User rejected")) {
+        errorMessage = "Transaction rejected by user"
+      }
+
+      toast({
+        title: "Approval failed",
+        description: errorMessage,
+        variant: "destructive"
+      })
+    } finally {
+      setApprovingLoan(null)
+    }
+  }
+
+  const handleRejectLoan = async (loanId: number) => {
+    try {
+      setRejectingLoan(loanId)
+      
+      const reason = prompt("Enter rejection reason:")
+      if (!reason) {
+        setRejectingLoan(null)
+        return
+      }
+
+      toast({
+        title: "Rejecting loan...",
+        description: "Please confirm the transaction in your wallet"
+      })
+
+      await rejectLoan(loanId, reason)
+
+      toast({
+        title: "Loan rejected",
+        description: `Loan #${loanId} has been rejected`,
+      })
+
+      // Refresh loan list
+      // TODO: Fetch from contract
+    } catch (error: any) {
+      console.error("Reject error:", error)
+      
+      let errorMessage = "Failed to reject loan"
+      if (error?.message?.includes("User rejected")) {
+        errorMessage = "Transaction rejected by user"
+      }
+
+      toast({
+        title: "Rejection failed",
+        description: errorMessage,
+        variant: "destructive"
+      })
+    } finally {
+      setRejectingLoan(null)
+    }
+  }
 
   const markAsFunded = (loanId: number) => {
     const newFunded = new Set(fundedLoans)
@@ -133,9 +215,10 @@ export default function AdminLoansPage() {
         <CardContent className="space-y-3">
           <div className="space-y-2 text-sm">
             <p><strong>Step 1:</strong> Review loan application details below</p>
-            <p><strong>Step 2:</strong> Call <code className="bg-background px-2 py-1 rounded">approveLoan(loanId)</code> on the MicroloanManager contract</p>
+            <p><strong>Step 2:</strong> Click "✓ Approve Loan" button (calls smart contract)</p>
             <p><strong>Step 3:</strong> Manually send PAS tokens from your wallet to the borrower's address</p>
             <p><strong>Step 4:</strong> Click "Mark as Funded" to track the disbursement</p>
+            <p className="text-xs text-muted-foreground pt-2">Note: Approval is on-chain. You can also reject loans with a reason.</p>
           </div>
           
           <div className="pt-3 border-t">
@@ -241,7 +324,28 @@ export default function AdminLoansPage() {
                   </div>
 
                   {/* Actions */}
-                  {!isFunded && (
+                  {!isFunded && loan.status === "Pending" && (
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        onClick={() => handleApproveLoan(loan.loanId)}
+                        disabled={approvingLoan === loan.loanId}
+                        className="flex-1"
+                        variant="default"
+                      >
+                        {approvingLoan === loan.loanId ? "Approving..." : "✓ Approve Loan"}
+                      </Button>
+                      <Button
+                        onClick={() => handleRejectLoan(loan.loanId)}
+                        disabled={rejectingLoan === loan.loanId}
+                        variant="destructive"
+                        className="flex-1"
+                      >
+                        {rejectingLoan === loan.loanId ? "Rejecting..." : "✗ Reject"}
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {!isFunded && loan.status === "Approved" && (
                     <div className="flex gap-2 pt-2">
                       <Button
                         onClick={() => markAsFunded(loan.loanId)}
