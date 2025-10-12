@@ -17,28 +17,29 @@ import {
   Menu,
   X,
   Shield,
+  Wallet,
+  ArrowDownToLine,
 } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { useAdmin } from "@/lib/hooks/useAdmin"
+import { useAdminCheck } from "@/lib/hooks/useAdminCheck"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/send", label: "Send Money", icon: Send },
-  { href: "/receive", label: "Receive Money", icon: Download },
-  { href: "/kyc", label: "KYC Verification", icon: FileCheck },
+  { href: "/add-money", label: "Add Money", icon: Wallet },
+  { href: "/send", label: "Send", icon: Send },
+  { href: "/exchange", label: "Exchange", icon: TrendingUp },
   { href: "/savings", label: "Savings", icon: PiggyBank },
-  { href: "/loans", label: "Microloans", icon: CreditCard },
-  { href: "/transactions", label: "Transactions", icon: History },
-  { href: "/networks", label: "Payment Networks", icon: Network },
-  { href: "/rates", label: "Exchange Rates", icon: TrendingUp },
-  { href: "/test", label: "Test Platform", icon: TestTube },
+  { href: "/loans", label: "Loans", icon: CreditCard },
+  { href: "/withdraw", label: "Withdraw", icon: ArrowDownToLine },
 ]
 
 export function DashboardNav() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { isAdmin } = useAdmin()
+  const { isAdmin } = useAdminCheck()
+  // Only show admin link to admin wallets
+  const showAdminLink = isAdmin
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -51,7 +52,7 @@ export function DashboardNav() {
         </Link>
 
         <div className="hidden lg:flex items-center gap-1">
-          {navItems.slice(0, 6).map((item) => (
+          {navItems.map((item) => (
             <Button
               key={item.href}
               variant={pathname === item.href ? "secondary" : "ghost"}
@@ -65,7 +66,7 @@ export function DashboardNav() {
               </Link>
             </Button>
           ))}
-          {isAdmin && (
+          {showAdminLink && (
             <Button
               variant={pathname.startsWith("/admin") ? "secondary" : "ghost"}
               size="sm"
@@ -107,7 +108,7 @@ export function DashboardNav() {
                 </Link>
               </Button>
             ))}
-            {isAdmin && (
+            {showAdminLink && (
               <Button
                 variant={pathname.startsWith("/admin") ? "secondary" : "ghost"}
                 className="w-full justify-start border-primary"

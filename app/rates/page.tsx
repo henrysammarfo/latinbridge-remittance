@@ -1,6 +1,7 @@
 import { DashboardNav } from "@/components/dashboard/dashboard-nav"
 import { ExchangeRates } from "@/components/rates/exchange-rates"
 
+
 export default function RatesPage() {
   return (
     <div className="min-h-screen bg-background">

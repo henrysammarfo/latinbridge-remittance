@@ -1,6 +1,7 @@
 import { DashboardNav } from "@/components/dashboard/dashboard-nav"
 import { TransactionHistory } from "@/components/transactions/transaction-history"
 
+
 export default function TransactionsPage() {
   return (
     <div className="min-h-screen bg-background">

@@ -1,6 +1,7 @@
 import { DashboardNav } from "@/components/dashboard/dashboard-nav"
 import { LoansInterface } from "@/components/loans/loans-interface"
 
+
 export default function LoansPage() {
   return (
     <div className="min-h-screen bg-background">

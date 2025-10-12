@@ -6,6 +6,7 @@ import { RecentTransactions } from "@/components/dashboard/recent-transactions"
 import { DashboardNav } from "@/components/dashboard/dashboard-nav"
 import { NetworkSwitch } from "@/components/shared/NetworkSwitch"
 
+
 export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background">

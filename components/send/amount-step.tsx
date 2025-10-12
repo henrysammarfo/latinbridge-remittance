@@ -1,11 +1,12 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowRight, Info } from "lucide-react"
+import { ArrowRight, Info, RefreshCw } from "lucide-react"
 import type { SendMoneyData } from "./send-money-flow"
 
 const currencies = [
@@ -25,10 +26,52 @@ interface AmountStepProps {
 }
 
 export function AmountStep({ data, updateData, onNext, onBack }: AmountStepProps) {
+  const [exchangeRates, setExchangeRates] = useState<{ [key: string]: number }>({
+    USD: 1,
+    MXN: 18.5,
+    BRL: 5.0,
+    ARS: 350.0,
+    COP: 4000.0,
+    GTQ: 7.8,
+  })
+  const [isLoadingRates, setIsLoadingRates] = useState(false)
+
+  // Fetch live exchange rates
+  useEffect(() => {
+    const fetchRates = async () => {
+      setIsLoadingRates(true)
+      try {
+        const response = await fetch('/api/rates/current')
+        const result = await response.json()
+        if (result.rates) {
+          setExchangeRates(result.rates)
+        }
+      } catch (error) {
+        console.error('Failed to fetch rates:', error)
+      } finally {
+        setIsLoadingRates(false)
+      }
+    }
+    fetchRates()
+  }, [])
+
+  // Calculate exchange rate between currencies
+  const calculateExchangeRate = () => {
+    const fromRate = exchangeRates[data.fromCurrency] || 1
+    const toRate = exchangeRates[data.toCurrency] || 1
+    return toRate / fromRate
+  }
+
+  const exchangeRate = calculateExchangeRate()
   const amount = Number.parseFloat(data.amount) || 0
   const fee = amount * 0.005
   const total = amount + fee
-  const recipientReceives = amount * data.exchangeRate
+  const recipientReceives = amount * exchangeRate
+
+  // Update exchange rate in parent
+  useEffect(() => {
+    updateData({ exchangeRate })
+  }, [exchangeRate])
 
   return (
     <Card className="border-border/50">
@@ -91,10 +134,16 @@ export function AmountStep({ data, updateData, onNext, onBack }: AmountStepProps
 
         <div className="flex items-center justify-center py-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>
-              1 {data.fromCurrency} = {data.exchangeRate} {data.toCurrency}
-            </span>
-            <ArrowRight className="h-4 w-4" />
+            {isLoadingRates ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <span>
+                  1 {data.fromCurrency} = {exchangeRate.toFixed(4)} {data.toCurrency}
+                </span>
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
           </div>
         </div>
 

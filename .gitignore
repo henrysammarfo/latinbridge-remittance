@@ -50,3 +50,6 @@ deployments
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Windows
+nul

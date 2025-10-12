@@ -1,6 +1,7 @@
 import { DashboardNav } from "@/components/dashboard/dashboard-nav"
 import { KYCVerificationCenter } from "@/components/kyc/kyc-verification-center"
 
+
 export default function KYCPage() {
   return (
     <div className="min-h-screen bg-background">

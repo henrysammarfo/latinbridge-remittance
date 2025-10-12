@@ -1,6 +1,7 @@
 import { DashboardNav } from "@/components/dashboard/dashboard-nav"
 import { SendMoneyFlow } from "@/components/send/send-money-flow"
 
+
 export default function SendPage() {
   return (
     <div className="min-h-screen bg-background">

@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useRemittance } from "@/lib/web3/hooks/useRemittance"
 import { Currency } from "@/lib/web3/hooks/useContracts"
 import { TransactionModal, TransactionState } from "@/components/shared/TransactionModal"
+import { addTransaction, updateTransactionStatus } from "@/lib/utils/transactionHistory"
 
 const currencies = [
   { code: "USD", name: "US Dollar", flag: "🇺🇸" },
@@ -99,7 +100,7 @@ export function ExchangeInterface() {
     }
 
     try {
-      setTxState('preparing')
+      setTxState('signing')
       
       // Convert currency codes to enum values
       const fromCurrencyEnum = Currency[fromCurrency as keyof typeof Currency]
@@ -114,8 +115,22 @@ export function ExchangeInterface() {
       )
 
       setTxHash(hash)
-      setTxState('processing')
-      
+      setTxState('pending')
+
+      // Add to transaction history
+      if (address) {
+        addTransaction(address, {
+          hash,
+          type: 'exchange',
+          status: 'pending',
+          amount: fromAmount,
+          currency: fromCurrency,
+          fromCurrency,
+          toCurrency,
+          description: `Exchanged ${fromAmount} ${fromCurrency} to ${toAmount} ${toCurrency}`
+        })
+      }
+
       toast({
         title: "Exchange transaction submitted",
         description: `Converting ${fromAmount} ${fromCurrency} to ${toCurrency}`,
@@ -124,14 +139,28 @@ export function ExchangeInterface() {
       // Reset form after successful exchange
       setTimeout(() => {
         setTxState('success')
+
+        // Update transaction status
+        if (address) {
+          updateTransactionStatus(address, hash, 'success')
+        }
+
+        // Trigger balance refresh
+        window.dispatchEvent(new Event('balanceUpdate'))
+
         setFromAmount('')
         setToAmount('')
       }, 2000)
 
     } catch (error: any) {
       console.error('Exchange error:', error)
-      setTxState('failed')
-      
+      setTxState('error')
+
+      // Update transaction status to failed if hash exists
+      if (address && txHash) {
+        updateTransactionStatus(address, txHash, 'failed')
+      }
+
       let errorMessage = "Failed to exchange currency"
       if (error?.message?.includes("Insufficient balance")) {
         errorMessage = `Insufficient ${fromCurrency} balance`

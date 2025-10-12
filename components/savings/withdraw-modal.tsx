@@ -10,6 +10,8 @@ import { useSavings } from "@/lib/web3/hooks/useSavings"
 import { Currency } from "@/lib/web3/hooks/useContracts"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
+import { useAccount } from "wagmi"
+import { addTransaction, updateTransactionStatus } from "@/lib/utils/transactionHistory"
 
 interface WithdrawModalProps {
   open: boolean
@@ -20,6 +22,7 @@ interface WithdrawModalProps {
 export function WithdrawModal({ open, onClose, onSuccess }: WithdrawModalProps) {
   const { withdraw, useBalance } = useSavings()
   const { toast } = useToast()
+  const { address } = useAccount()
   const [amount, setAmount] = useState("")
   const [currency, setCurrency] = useState("USD")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -51,12 +54,32 @@ export function WithdrawModal({ open, onClose, onSuccess }: WithdrawModalProps) 
         description: "Please confirm the transaction in your wallet"
       })
 
-      await withdraw(currencyEnum, amount)
+      const hash = await withdraw(currencyEnum, amount)
+
+      // Add to transaction history
+      if (address && hash) {
+        addTransaction(address, {
+          hash,
+          type: 'savings_withdraw',
+          status: 'pending',
+          amount,
+          currency,
+          description: `Withdrew ${amount} ${currency} from savings`
+        })
+
+        // Update to success after a delay
+        setTimeout(() => {
+          updateTransactionStatus(address, hash, 'success')
+        }, 3000)
+      }
 
       toast({
         title: "Withdrawal successful!",
         description: `${amount} ${currency} withdrawn from savings to your LatinBridge balance`
       })
+
+      // Trigger balance refresh
+      window.dispatchEvent(new Event('balanceUpdate'))
 
       if (onSuccess) onSuccess()
       setAmount("")

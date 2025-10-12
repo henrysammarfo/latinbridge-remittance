@@ -1,12 +1,14 @@
 "use client"
 
+export const dynamic = 'force-dynamic'
+
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useAdmin } from "@/lib/hooks/useAdmin"
+import { useAdminCheck } from "@/lib/hooks/useAdminCheck"
 import { useRemittance } from "@/lib/web3/hooks/useRemittance"
 import { Currency, CURRENCY_SYMBOLS } from "@/lib/web3/hooks/useContracts"
 import { useToast } from "@/hooks/use-toast"
@@ -16,7 +18,7 @@ import { useAccount } from "wagmi"
 
 export default function AdminReservesPage() {
   const { isConnected } = useAccount()
-  const { isAdmin } = useAdmin()
+  const { isAdmin } = useAdminCheck()
   const router = useRouter()
   const { toast } = useToast()
   const { 
@@ -66,7 +68,15 @@ export default function AdminReservesPage() {
         description: `Deposited ${depositAmount} ${CURRENCY_SYMBOLS[selectedCurrency]} to platform reserves`,
       })
       setDepositAmount("")
+      
+      // Refetch all reserves
       currentReserve.refetch()
+      usdReserve.refetch()
+      mxnReserve.refetch()
+      brlReserve.refetch()
+      arsReserve.refetch()
+      copReserve.refetch()
+      gtqReserve.refetch()
     } catch (error: any) {
       toast({
         title: "Deposit Failed",
@@ -96,7 +106,15 @@ export default function AdminReservesPage() {
         description: `Withdrew ${withdrawAmount} ${CURRENCY_SYMBOLS[selectedCurrency]} from platform reserves`,
       })
       setWithdrawAmount("")
+      
+      // Refetch all reserves
       currentReserve.refetch()
+      usdReserve.refetch()
+      mxnReserve.refetch()
+      brlReserve.refetch()
+      arsReserve.refetch()
+      copReserve.refetch()
+      gtqReserve.refetch()
     } catch (error: any) {
       toast({
         title: "Withdrawal Failed",

@@ -1,9 +1,10 @@
 "use client"
 
+
 import { useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useAdmin } from "@/lib/hooks/useAdmin"
+import { useAdminCheck } from "@/lib/hooks/useAdminCheck"
 import { useRouter } from "next/navigation"
 import { useAccount } from "wagmi"
 import { ShieldAlert, Shield, ArrowRight } from "lucide-react"
@@ -12,7 +13,7 @@ import Link from "next/link"
 
 export default function AdminPage() {
   const { isConnected } = useAccount()
-  const { isAdmin } = useAdmin()
+  const { isAdmin } = useAdminCheck()
   const router = useRouter()
   const { toast } = useToast()
 

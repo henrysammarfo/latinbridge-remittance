@@ -12,6 +12,8 @@ import { Loader2 } from "lucide-react"
 import { useLoans } from "@/lib/web3/hooks/useLoans"
 import { Currency } from "@/lib/web3/hooks/useContracts"
 import { useToast } from "@/hooks/use-toast"
+import { useAccount } from "wagmi"
+import { addTransaction, updateTransactionStatus } from "@/lib/utils/transactionHistory"
 
 interface LoanApplicationModalProps {
   open: boolean
@@ -23,6 +25,7 @@ interface LoanApplicationModalProps {
 
 export function LoanApplicationModal({ open, onClose, maxAmount, interestRate, onSuccess }: LoanApplicationModalProps) {
   const { toast } = useToast()
+  const { address } = useAccount()
   const { applyForLoan } = useLoans()
 
   const [amount, setAmount] = useState("1000")
@@ -61,12 +64,29 @@ export function LoanApplicationModal({ open, onClose, maxAmount, interestRate, o
       const durationDays = termMonths * 30 // Convert months to days
       // Note: Collateral is not yet implemented in the smart contract
 
-      await applyForLoan(
+      const hash = await applyForLoan(
         amount,
         currencyEnum,
         durationDays,
         purpose
       )
+
+      // Add to transaction history
+      if (address && hash) {
+        addTransaction(address, {
+          hash,
+          type: 'loan_apply',
+          status: 'pending',
+          amount,
+          currency,
+          description: `Applied for ${amount} ${currency} loan (${termMonths} months)`
+        })
+
+        // Update to success after a delay
+        setTimeout(() => {
+          updateTransactionStatus(address, hash, 'success')
+        }, 3000)
+      }
 
       toast({
         title: "Loan approved!",

@@ -55,6 +55,20 @@ export function WalletOverview() {
     return () => clearInterval(interval)
   }, [])
 
+  // Listen for balance update events and refetch all balances
+  useEffect(() => {
+    const handleBalanceUpdate = () => {
+      console.log('🔄 Balance update event received - refreshing all balances')
+      // Refetch all currency balances
+      Object.values(balances).forEach(balance => balance.refetch())
+      // Refetch savings balance
+      savingsUSD.refetch()
+    }
+
+    window.addEventListener('balanceUpdate', handleBalanceUpdate)
+    return () => window.removeEventListener('balanceUpdate', handleBalanceUpdate)
+  }, [balances, savingsUSD])
+
   if (!isConnected) {
     return (
       <Card className="border-border/50">

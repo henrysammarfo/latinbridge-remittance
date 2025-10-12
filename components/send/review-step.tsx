@@ -10,6 +10,7 @@ import { Currency } from "@/lib/web3/hooks/useContracts"
 import { TransactionModal, TransactionState } from "@/components/shared/TransactionModal"
 import { useToast } from "@/hooks/use-toast"
 import { useAccount } from "wagmi"
+import { addTransaction, updateTransactionStatus } from "@/lib/utils/transactionHistory"
 
 interface ReviewStepProps {
   data: SendMoneyData
@@ -19,7 +20,7 @@ interface ReviewStepProps {
 
 export function ReviewStep({ data, onConfirm, onBack }: ReviewStepProps) {
   const { toast } = useToast()
-  const { isConnected } = useAccount()
+  const { isConnected, address } = useAccount()
   const { sendRemittance } = useRemittance()
 
   const [txState, setTxState] = useState<TransactionState>('idle')
@@ -100,20 +101,55 @@ export function ReviewStep({ data, onConfirm, onBack }: ReviewStepProps) {
       setTxHash(hash)
       setTxState('pending')
 
-      // Wait for confirmation (you could use waitForTransaction here)
-      // For now, we'll just show success after a short delay
+      // Add to transaction history
+      if (address) {
+        addTransaction(address, {
+          hash,
+          type: 'send',
+          status: 'pending',
+          amount: amount.toString(),
+          currency: data.fromCurrency,
+          fromCurrency: data.fromCurrency,
+          toCurrency: data.toCurrency,
+          recipient: recipientAddress,
+          description: `Sent ${amount.toFixed(2)} ${data.fromCurrency} to ${data.recipient?.name || recipientAddress.slice(0, 10)}`
+        })
+      }
+
+      // Wait for transaction to be mined
       setTimeout(() => {
         setTxState('success')
 
-        // After showing success, close modal and navigate to confirmation
+        // Update transaction status
+        if (address) {
+          updateTransactionStatus(address, hash, 'success')
+        }
+        
+        // Trigger balance refresh event
+        window.dispatchEvent(new Event('balanceUpdate'))
+        
+        toast({
+          title: "Money sent successfully!",
+          description: `${amount.toFixed(2)} ${data.fromCurrency} sent to ${data.recipient?.name}`,
+        })
+
+        // After showing success, navigate to confirmation
         setTimeout(() => {
           setIsModalOpen(false)
           onConfirm(hash)
+          
+          // Force page reload to ensure all balances update
+          window.location.href = '/dashboard'
         }, 2000)
       }, 3000)
 
     } catch (err: any) {
       console.error('Transaction error:', err)
+
+      // Update transaction status to failed if hash exists
+      if (address && txHash) {
+        updateTransactionStatus(address, txHash, 'failed')
+      }
 
       let errorMessage = 'Transaction failed'
       if (err?.message) {

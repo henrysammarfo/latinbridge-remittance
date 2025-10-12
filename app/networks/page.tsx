@@ -1,6 +1,7 @@
 import { DashboardNav } from "@/components/dashboard/dashboard-nav"
 import { PaymentNetworks } from "@/components/networks/payment-networks"
 
+
 export default function NetworksPage() {
   return (
     <div className="min-h-screen bg-background">

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAdmin } from "@/lib/hooks/useAdmin"
+import { addTransaction, updateTransactionStatus } from "@/lib/utils/transactionHistory"
 
 export function LoansInterface() {
   const { toast } = useToast()
@@ -46,7 +47,25 @@ export function LoansInterface() {
       })
 
       // FIXED: Pass loanId and amount
-      await repayLoan(loanId, activeLoan?.amount || "0")
+      const hash = await repayLoan(loanId, activeLoan?.amount || "0")
+
+      // Add to transaction history
+      if (address && hash) {
+        const amount = activeLoan?.amount || "0"
+        addTransaction(address, {
+          hash,
+          type: 'loan_repay',
+          status: 'pending',
+          amount,
+          currency: 'USD',
+          description: `Repaid loan ${loanId} - ${amount} USD`
+        })
+
+        // Update to success after a delay
+        setTimeout(() => {
+          updateTransactionStatus(address, hash, 'success')
+        }, 3000)
+      }
 
       toast({
         title: "Payment successful!",

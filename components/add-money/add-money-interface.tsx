@@ -13,6 +13,7 @@ import { useRemittance } from "@/lib/web3/hooks/useRemittance"
 import { Currency } from "@/lib/web3/hooks/useContracts"
 import { useToast } from "@/hooks/use-toast"
 import { TransactionModal, TransactionState } from "@/components/shared/TransactionModal"
+import { addTransaction, updateTransactionStatus } from "@/lib/utils/transactionHistory"
 
 export function AddMoneyInterface() {
   const { address, isConnected } = useAccount()
@@ -85,14 +86,36 @@ export function AddMoneyInterface() {
       setError(undefined)
 
       const hash = await deposit(getCurrencyEnum(depositCurrency), depositAmount)
-      
+
       setTxHash(hash)
       setTxState('pending')
 
-      // Simulate confirmation
-      setTimeout(() => {
+      // Add to transaction history
+      if (address) {
+        addTransaction(address, {
+          hash,
+          type: 'deposit',
+          status: 'pending',
+          amount: depositAmount,
+          currency: depositCurrency,
+          description: `Deposited ${depositAmount} PAS as ${depositCurrency}`
+        })
+      }
+
+      // Wait for transaction to be mined
+      setTimeout(async () => {
         setTxState('success')
-        refetch() // Refresh balance
+
+        // Update transaction status
+        if (address) {
+          updateTransactionStatus(address, hash, 'success')
+        }
+        
+        // Refetch balance from blockchain
+        await refetch()
+        
+        // Trigger a page-wide refresh event
+        window.dispatchEvent(new Event('balanceUpdate'))
         
         toast({
           title: "Deposit successful!",
@@ -102,12 +125,20 @@ export function AddMoneyInterface() {
         setTimeout(() => {
           setIsModalOpen(false)
           setDepositAmount("")
-        }, 2000)
+          
+          // Force refresh all balances on the page
+          window.location.reload()
+        }, 1500)
       }, 3000)
 
     } catch (err: any) {
       console.error('Deposit error:', err)
-      
+
+      // Update transaction status to failed if hash exists
+      if (address && txHash) {
+        updateTransactionStatus(address, txHash, 'failed')
+      }
+
       let errorMessage = 'Deposit failed'
       if (err?.message) {
         if (err.message.includes('User rejected')) {
