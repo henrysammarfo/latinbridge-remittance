@@ -92,6 +92,25 @@ export default function AdminPage() {
           </Card>
         </Link>
 
+        {/* Platform Reserves */}
+        <Link href="/admin/reserves">
+          <Card className="hover:border-primary transition-colors cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Platform Reserves</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Manage platform reserves for funding loans and savings operations
+                  </p>
+                  <div className="flex items-center text-primary text-sm font-medium">
+                    Manage Reserves <ArrowRight className="h-4 w-4 ml-1" />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
         {/* Coming Soon - User Management */}
         <Card className="opacity-50">
           <CardContent className="p-6">

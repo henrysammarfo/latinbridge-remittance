@@ -107,6 +107,65 @@ export function useRemittance() {
     return balance
   }
 
+  /**
+   * ADMIN: Get platform reserve balance for a currency
+   */
+  const usePlatformReserve = (currency: Currency) => {
+    const { data: reserve, isLoading, refetch } = useReadContract({
+      address: CONTRACT_ADDRESSES.remittanceVault,
+      abi: ABIS.remittanceVault,
+      functionName: 'getPlatformReserve',
+      args: [currency],
+      query: {
+        enabled: true,
+      },
+    })
+
+    return {
+      reserve: reserve ? formatUnits(reserve as bigint, 18) : '0',
+      reserveRaw: reserve as bigint,
+      isLoading,
+      refetch,
+    }
+  }
+
+  /**
+   * ADMIN: Deposit to platform reserves
+   */
+  const depositToPlatformReserves = async (currency: Currency, amount: string) => {
+    if (!address) throw new Error('No wallet connected')
+
+    const amountWei = parseUnits(amount, 18)
+
+    const hash = await writeContractAsync({
+      address: CONTRACT_ADDRESSES.remittanceVault,
+      abi: ABIS.remittanceVault,
+      functionName: 'depositToPlatformReserves',
+      args: [currency, amountWei],
+      value: amountWei, // Send PAS tokens
+    })
+
+    return hash
+  }
+
+  /**
+   * ADMIN: Withdraw from platform reserves
+   */
+  const withdrawFromPlatformReserves = async (currency: Currency, amount: string) => {
+    if (!address) throw new Error('No wallet connected')
+
+    const amountWei = parseUnits(amount, 18)
+
+    const hash = await writeContractAsync({
+      address: CONTRACT_ADDRESSES.remittanceVault,
+      abi: ABIS.remittanceVault,
+      functionName: 'withdrawFromPlatformReserves',
+      args: [currency, amountWei],
+    })
+
+    return hash
+  }
+
   return {
     // PAS native balance
     pasBalance: pasBalance ? formatUnits(pasBalance.value, 18) : '0',
@@ -119,5 +178,10 @@ export function useRemittance() {
     // Helpers
     useBalanceOf,
     useTotalBalance,
+
+    // Admin: Platform Reserves
+    usePlatformReserve,
+    depositToPlatformReserves,
+    withdrawFromPlatformReserves,
   }
 }
