@@ -44,6 +44,7 @@ export function EnhancedTestPlatform() {
   const [testRecipient, setTestRecipient] = useState('')
 
   const handleConnect = async () => {
+    if (!connectors || connectors.length === 0) return
     const injected = connectors.find(c => c.id === 'injected')
     if (injected) {
       await connect({ connector: injected })

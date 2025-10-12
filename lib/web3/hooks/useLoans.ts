@@ -31,26 +31,28 @@ export function useLoans() {
 
   /**
    * Check loan eligibility
+   * NOTE: For testnet, we allow all users to be eligible
+   * In production, this would check KYC status and credit score
    */
-  const { data: isEligible, refetch: refetchEligibility } = useReadContract({
-    address: CONTRACT_ADDRESSES.microloanManager,
-    abi: ABIS.microloanManager,
-    functionName: 'checkEligibility',
-    args: address ? [address] : undefined,
-    query: {
-      enabled: !!address,
-    },
-  })
+  const isEligible = !!address // All connected users are eligible on testnet
+  
+  const refetchEligibility = () => {
+    // No-op for testnet
+  }
 
   /**
-   * Get interest rate based on credit score
+   * Get interest rate for user
+   * FIXED: Contract expects address, not creditScore
    */
-  const useInterestRate = (creditScore: number) => {
+  const useInterestRate = () => {
     const { data: rate } = useReadContract({
       address: CONTRACT_ADDRESSES.microloanManager,
       abi: ABIS.microloanManager,
       functionName: 'calculateInterestRate',
-      args: [BigInt(creditScore)],
+      args: address ? [address] : undefined,
+      query: {
+        enabled: !!address,
+      },
     })
 
     return {
@@ -64,7 +66,8 @@ export function useLoans() {
   const applyForLoan = async (
     amount: string,
     currency: Currency,
-    durationDays: number
+    durationDays: number,
+    purpose?: string
   ) => {
     if (!address) throw new Error('No wallet connected')
 
@@ -73,8 +76,8 @@ export function useLoans() {
     const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.microloanManager,
       abi: ABIS.microloanManager,
-      functionName: 'applyForLoan',
-      args: [amountWei, currency, BigInt(durationDays)],
+      functionName: 'requestLoan',
+      args: [amountWei, currency, BigInt(durationDays), purpose || 'Personal loan'],
     })
 
     return hash
@@ -82,8 +85,9 @@ export function useLoans() {
 
   /**
    * Repay loan
+   * FIXED: Contract expects (loanId, amount), not just amount
    */
-  const repayLoan = async (amount: string) => {
+  const repayLoan = async (loanId: number, amount: string) => {
     if (!address) throw new Error('No wallet connected')
 
     const amountWei = parseUnits(amount, 18)
@@ -92,8 +96,7 @@ export function useLoans() {
       address: CONTRACT_ADDRESSES.microloanManager,
       abi: ABIS.microloanManager,
       functionName: 'repayLoan',
-      args: [amountWei],
-      value: amountWei,
+      args: [BigInt(loanId), amountWei],
     })
 
     return hash
@@ -112,9 +115,41 @@ export function useLoans() {
     return principal + interest
   }
 
+  /**
+   * Admin: Approve a loan
+   */
+  const approveLoan = async (loanId: number) => {
+    if (!address) throw new Error('No wallet connected')
+
+    const hash = await writeContractAsync({
+      address: CONTRACT_ADDRESSES.microloanManager,
+      abi: ABIS.microloanManager,
+      functionName: 'approveLoan',
+      args: [BigInt(loanId)],
+    })
+
+    return hash
+  }
+
+  /**
+   * Admin: Reject a loan
+   */
+  const rejectLoan = async (loanId: number, reason: string) => {
+    if (!address) throw new Error('No wallet connected')
+
+    const hash = await writeContractAsync({
+      address: CONTRACT_ADDRESSES.microloanManager,
+      abi: ABIS.microloanManager,
+      functionName: 'rejectLoan',
+      args: [BigInt(loanId), reason],
+    })
+
+    return hash
+  }
+
   return {
     // Data
-    isEligible: !!isEligible,
+    isEligible,
 
     // Hooks
     useActiveLoan,
@@ -123,6 +158,8 @@ export function useLoans() {
     // Actions
     applyForLoan,
     repayLoan,
+    approveLoan,
+    rejectLoan,
 
     // Utilities
     calculateRepayment,

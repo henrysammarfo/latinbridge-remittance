@@ -46,7 +46,7 @@ export function useRemittance() {
     const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.remittanceVault,
       abi: ABIS.remittanceVault,
-      functionName: 'deposit',
+      functionName: 'depositFunds',
       args: [currency, amountWei],
       value: amountWei, // Send PAS tokens
     })
@@ -56,6 +56,7 @@ export function useRemittance() {
 
   /**
    * Withdraw funds
+   * FIXED: Contract function is withdrawFunds, not withdraw
    */
   const withdraw = async (currency: Currency, amount: string) => {
     if (!address) throw new Error('No wallet connected')
@@ -65,7 +66,7 @@ export function useRemittance() {
     const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.remittanceVault,
       abi: ABIS.remittanceVault,
-      functionName: 'withdraw',
+      functionName: 'withdrawFunds',
       args: [currency, amountWei],
     })
 
@@ -74,6 +75,7 @@ export function useRemittance() {
 
   /**
    * Send remittance
+   * Contract expects: (address recipient, Currency fromCurrency, Currency toCurrency, uint256 amount)
    */
   const sendRemittance = async (
     recipient: `0x${string}`,
@@ -89,7 +91,7 @@ export function useRemittance() {
       address: CONTRACT_ADDRESSES.remittanceVault,
       abi: ABIS.remittanceVault,
       functionName: 'sendRemittance',
-      args: [recipient, amountWei, fromCurrency, toCurrency],
+      args: [recipient, fromCurrency, toCurrency, amountWei], // Fixed parameter order!
     })
 
     return hash

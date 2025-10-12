@@ -16,9 +16,11 @@ import {
   TestTube,
   Menu,
   X,
+  Shield,
 } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { useAdmin } from "@/lib/hooks/useAdmin"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -36,6 +38,7 @@ const navItems = [
 export function DashboardNav() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { isAdmin } = useAdmin()
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -62,6 +65,19 @@ export function DashboardNav() {
               </Link>
             </Button>
           ))}
+          {isAdmin && (
+            <Button
+              variant={pathname.startsWith("/admin") ? "secondary" : "ghost"}
+              size="sm"
+              asChild
+              className={cn(pathname.startsWith("/admin") && "bg-secondary border-primary")}
+            >
+              <Link href="/admin">
+                <Shield className="h-4 w-4 mr-2" />
+                Admin
+              </Link>
+            </Button>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -91,6 +107,19 @@ export function DashboardNav() {
                 </Link>
               </Button>
             ))}
+            {isAdmin && (
+              <Button
+                variant={pathname.startsWith("/admin") ? "secondary" : "ghost"}
+                className="w-full justify-start border-primary"
+                asChild
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Link href="/admin">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin Panel
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       )}

@@ -25,6 +25,9 @@ contract RemittanceVault {
     // User balances: user => currency => amount
     mapping(address => mapping(Currency => uint256)) private balances;
 
+    // Platform reserves (for loans/savings)
+    mapping(Currency => uint256) public platformReserves;
+
     // Total fees collected per currency
     mapping(Currency => uint256) public collectedFees;
 
@@ -100,13 +103,36 @@ contract RemittanceVault {
     }
 
     /**
-     * @dev Deposit funds into the vault
+     * @dev Deposit PAS tokens and convert to target currency using live exchange rate
+     * CRITICAL: Uses ExchangeRateOracle for real conversion rates
      */
     function depositFunds(Currency currency, uint256 amount) external payable whenNotPaused nonReentrant {
         require(amount > 0, "Amount must be > 0");
+        require(msg.value == amount, "Must send PAS tokens");
 
-        balances[msg.sender][currency] += amount;
-        emit Deposit(msg.sender, currency, amount, block.timestamp);
+        // Get PAS/USD rate from oracle (if oracle is set)
+        uint256 convertedAmount;
+        if (oracleAddress != address(0) && currency != Currency.USD) {
+            // Get rate for target currency
+            (bool success, bytes memory data) = oracleAddress.call(
+                abi.encodeWithSignature("getRate(uint8)", uint8(currency))
+            );
+            
+            if (success && data.length > 0) {
+                uint256 rate = abi.decode(data, (uint256));
+                // Convert PAS to target currency: amount * rate / 10^18
+                convertedAmount = (amount * rate) / 10**18;
+            } else {
+                // Fallback to 1:1 if oracle fails
+                convertedAmount = amount;
+            }
+        } else {
+            // For USD or no oracle, treat as 1:1
+            convertedAmount = amount;
+        }
+
+        balances[msg.sender][currency] += convertedAmount;
+        emit Deposit(msg.sender, currency, convertedAmount, block.timestamp);
     }
 
     /**
@@ -197,6 +223,22 @@ contract RemittanceVault {
     }
 
     /**
+     * @dev Transfer balance between accounts (for contract integrations like SavingsPool)
+     * CRITICAL: This allows proper balance transfers between systems
+     */
+    function transferFrom(address from, address to, Currency currency, uint256 amount) external nonReentrant returns (bool) {
+        require(amount > 0, "Amount must be > 0");
+        require(balances[from][currency] >= amount, "Insufficient balance");
+        
+        // Deduct from sender
+        balances[from][currency] -= amount;
+        // Add to recipient
+        balances[to][currency] += amount;
+        
+        return true;
+    }
+
+    /**
      * @dev Get all balances for a user
      */
     function getAllBalances(address user) external view returns (uint256[6] memory) {
@@ -278,6 +320,50 @@ contract RemittanceVault {
         balances[owner][currency] += amount;
 
         emit FeeWithdrawn(currency, amount, owner);
+    }
+
+    /**
+     * @dev Admin deposit to platform reserves (for funding loans/savings)
+     * CRITICAL: Admin pool management
+     */
+    function depositToPlatformReserves(Currency currency, uint256 amount) external payable onlyOwner nonReentrant {
+        require(amount > 0, "Amount must be > 0");
+        
+        platformReserves[currency] += amount;
+        emit Deposit(owner, currency, amount, block.timestamp);
+    }
+
+    /**
+     * @dev Admin withdraw from platform reserves
+     * CRITICAL: Admin pool management
+     */
+    function withdrawFromPlatformReserves(Currency currency, uint256 amount) external onlyOwner nonReentrant {
+        require(amount > 0, "Amount must be > 0");
+        require(platformReserves[currency] >= amount, "Insufficient reserves");
+        
+        platformReserves[currency] -= amount;
+        emit Withdrawal(owner, currency, amount, block.timestamp);
+    }
+
+    /**
+     * @dev Get platform reserve balance for a currency
+     */
+    function getPlatformReserve(Currency currency) external view returns (uint256) {
+        return platformReserves[currency];
+    }
+
+    /**
+     * @dev Get all platform reserves
+     */
+    function getAllPlatformReserves() external view returns (uint256[6] memory) {
+        return [
+            platformReserves[Currency.USD],
+            platformReserves[Currency.MXN],
+            platformReserves[Currency.BRL],
+            platformReserves[Currency.ARS],
+            platformReserves[Currency.COP],
+            platformReserves[Currency.GTQ]
+        ];
     }
 
     /**

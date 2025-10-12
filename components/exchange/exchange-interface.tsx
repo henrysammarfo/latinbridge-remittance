@@ -9,6 +9,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowDownUp, TrendingUp, Loader2, Info } from "lucide-react"
 import { useAccount } from "wagmi"
 import { useToast } from "@/hooks/use-toast"
+import { useRemittance } from "@/lib/web3/hooks/useRemittance"
+import { Currency } from "@/lib/web3/hooks/useContracts"
+import { TransactionModal, TransactionState } from "@/components/shared/TransactionModal"
 
 const currencies = [
   { code: "USD", name: "US Dollar", flag: "🇺🇸" },
@@ -20,14 +23,17 @@ const currencies = [
 ]
 
 export function ExchangeInterface() {
-  const { isConnected } = useAccount()
+  const { address, isConnected } = useAccount()
   const { toast } = useToast()
+  const { sendRemittance } = useRemittance()
   const [fromCurrency, setFromCurrency] = useState("USD")
   const [toCurrency, setToCurrency] = useState("MXN")
   const [fromAmount, setFromAmount] = useState("")
   const [toAmount, setToAmount] = useState("")
   const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({})
   const [isLoadingRates, setIsLoadingRates] = useState(false)
+  const [txState, setTxState] = useState<TransactionState>('idle')
+  const [txHash, setTxHash] = useState<string>('')
 
   // Fetch real exchange rates from API
   useEffect(() => {
@@ -74,7 +80,7 @@ export function ExchangeInterface() {
   const handleExchange = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!isConnected) {
+    if (!isConnected || !address) {
       toast({
         title: "Wallet not connected",
         description: "Please connect your wallet to exchange currency",
@@ -83,10 +89,62 @@ export function ExchangeInterface() {
       return
     }
 
-    toast({
-      title: "Exchange feature",
-      description: "Currency exchange will execute on the RemittanceVault contract",
-    })
+    if (!fromAmount || parseFloat(fromAmount) <= 0) {
+      toast({
+        title: "Invalid amount",
+        description: "Please enter a valid amount to exchange",
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      setTxState('preparing')
+      
+      // Convert currency codes to enum values
+      const fromCurrencyEnum = Currency[fromCurrency as keyof typeof Currency]
+      const toCurrencyEnum = Currency[toCurrency as keyof typeof Currency]
+
+      // Use sendRemittance to self to perform currency exchange
+      const hash = await sendRemittance(
+        address, // Send to self
+        fromAmount, // Amount as string
+        fromCurrencyEnum,
+        toCurrencyEnum
+      )
+
+      setTxHash(hash)
+      setTxState('processing')
+      
+      toast({
+        title: "Exchange transaction submitted",
+        description: `Converting ${fromAmount} ${fromCurrency} to ${toCurrency}`,
+      })
+
+      // Reset form after successful exchange
+      setTimeout(() => {
+        setTxState('success')
+        setFromAmount('')
+        setToAmount('')
+      }, 2000)
+
+    } catch (error: any) {
+      console.error('Exchange error:', error)
+      setTxState('failed')
+      
+      let errorMessage = "Failed to exchange currency"
+      if (error?.message?.includes("Insufficient balance")) {
+        errorMessage = `Insufficient ${fromCurrency} balance`
+      } else if (error?.message?.includes("User rejected")) {
+        errorMessage = "Transaction rejected by user"
+      }
+
+      toast({
+        title: "Exchange failed",
+        description: errorMessage,
+        variant: "destructive"
+      })
+    }
   }
 
   const currentRate = exchangeRates[toCurrency] && exchangeRates[fromCurrency]
@@ -214,6 +272,15 @@ export function ExchangeInterface() {
         </form>
       </CardContent>
     </Card>
+
+    <TransactionModal
+      isOpen={txState !== 'idle'}
+      onClose={() => setTxState('idle')}
+      state={txState}
+      txHash={txHash}
+      title="Currency Exchange"
+      description={`Exchanging ${fromAmount} ${fromCurrency} to ${toCurrency}`}
+    />
     </div>
   )
 }

@@ -197,14 +197,16 @@ export function KYCVerificationCenter() {
       // await updateKYCLevel(newLevel)
 
       toast({
-        title: "KYC Simulation Complete",
-        description: `KYC verification simulated for ${getTierName(selectedTier)}. On mainnet, this will update your on-chain KYC status.`,
+        title: "KYC Verification Simulated",
+        description: `${getTierName(selectedTier)} verified locally. Note: On-chain KYC requires admin approval. For testing, this tier is now active in the UI.`,
+        duration: 5000,
       })
 
-      // Update local state
+      // Update local state only (testnet limitation)
       setCurrentKYCLevel(newLevel)
       const updatedTiers = currentTiers.map(tier => {
-        if (tier.id === selectedTier) {
+        const tierLevel = tierToKYCLevel(tier.id)
+        if (tierLevel <= newLevel) {
           return { ...tier, status: "verified" as KYCStatus }
         }
         return tier

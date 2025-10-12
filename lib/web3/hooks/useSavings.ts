@@ -32,12 +32,13 @@ export function useSavings() {
 
   /**
    * Get accrued interest
+   * FIXED: Contract has calculateYield, not getAccruedInterest
    */
   const useAccruedInterest = (currency: Currency) => {
     const { data: interest, refetch } = useReadContract({
       address: CONTRACT_ADDRESSES.savingsPool,
       abi: ABIS.savingsPool,
-      functionName: 'getAccruedInterest',
+      functionName: 'calculateYield',
       args: address ? [address, currency] : undefined,
       query: {
         enabled: !!address,
@@ -74,9 +75,8 @@ export function useSavings() {
     const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.savingsPool,
       abi: ABIS.savingsPool,
-      functionName: 'deposit',
+      functionName: 'depositToSavings',
       args: [currency, amountWei],
-      value: amountWei,
     })
 
     return hash
@@ -93,7 +93,7 @@ export function useSavings() {
     const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.savingsPool,
       abi: ABIS.savingsPool,
-      functionName: 'withdraw',
+      functionName: 'withdrawFromSavings',
       args: [currency, amountWei],
     })
 

@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+interface IRemittanceVault {
+    enum Currency { USD, MXN, BRL, ARS, COP, GTQ }
+    function getBalance(address user, Currency currency) external view returns (uint256);
+    function transferFrom(address from, address to, Currency currency, uint256 amount) external returns (bool);
+}
+
 /**
  * @title SavingsPool
  * @dev Yield farming system with interest calculation and savings goals
+ * NOW INTEGRATED with RemittanceVault
  */
 contract SavingsPool {
     uint256 private constant _NOT_ENTERED = 1;
@@ -11,6 +18,7 @@ contract SavingsPool {
     uint256 private _status;
 
     address public owner;
+    IRemittanceVault public remittanceVault;
 
     enum Currency { USD, MXN, BRL, ARS, COP, GTQ }
 
@@ -57,9 +65,10 @@ contract SavingsPool {
         _status = _NOT_ENTERED;
     }
 
-    constructor() {
+    constructor(address _remittanceVault) {
         owner = msg.sender;
         _status = _NOT_ENTERED;
+        remittanceVault = IRemittanceVault(_remittanceVault);
 
         // Initialize default APY for all currencies
         apy[Currency.USD] = DEFAULT_APY;
@@ -71,10 +80,17 @@ contract SavingsPool {
     }
 
     /**
-     * @dev Deposit funds to savings
+     * @dev Deposit funds to savings FROM RemittanceVault balance
+     * CRITICAL: This now actually transfers from your LatinBridge balance
      */
     function depositToSavings(Currency currency, uint256 amount) external nonReentrant {
         require(amount > 0, "Amount must be > 0");
+        
+        // CHECK: User must have balance in RemittanceVault
+        require(remittanceVault.getBalance(msg.sender, currency) >= amount, "Insufficient RemittanceVault balance");
+
+        // TRANSFER: Move funds from RemittanceVault to SavingsPool
+        require(remittanceVault.transferFrom(msg.sender, address(this), currency, amount), "Transfer failed");
 
         // Update yield before deposit
         _updateYield(msg.sender, currency);
@@ -92,7 +108,8 @@ contract SavingsPool {
     }
 
     /**
-     * @dev Withdraw funds from savings
+     * @dev Withdraw funds from savings BACK TO RemittanceVault
+     * CRITICAL: This returns money to your LatinBridge balance
      */
     function withdrawFromSavings(Currency currency, uint256 amount) external nonReentrant {
         require(amount > 0, "Amount must be > 0");
@@ -105,6 +122,9 @@ contract SavingsPool {
 
         account.principal -= amount;
         totalDeposited[currency] -= amount;
+
+        // TRANSFER BACK: Move funds from SavingsPool to RemittanceVault
+        require(remittanceVault.transferFrom(address(this), msg.sender, currency, amount), "Transfer back failed");
 
         emit Withdrawn(msg.sender, currency, amount, block.timestamp);
     }
