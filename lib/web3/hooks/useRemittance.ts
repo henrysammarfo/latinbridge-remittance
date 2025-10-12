@@ -56,6 +56,7 @@ export function useRemittance() {
 
   /**
    * Withdraw funds
+   * FIXED: Contract function is withdrawFunds, not withdraw
    */
   const withdraw = async (currency: Currency, amount: string) => {
     if (!address) throw new Error('No wallet connected')
@@ -65,7 +66,7 @@ export function useRemittance() {
     const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.remittanceVault,
       abi: ABIS.remittanceVault,
-      functionName: 'withdraw',
+      functionName: 'withdrawFunds',
       args: [currency, amountWei],
     })
 

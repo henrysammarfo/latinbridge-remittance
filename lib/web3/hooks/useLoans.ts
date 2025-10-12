@@ -41,14 +41,18 @@ export function useLoans() {
   }
 
   /**
-   * Get interest rate based on credit score
+   * Get interest rate for user
+   * FIXED: Contract expects address, not creditScore
    */
-  const useInterestRate = (creditScore: number) => {
+  const useInterestRate = () => {
     const { data: rate } = useReadContract({
       address: CONTRACT_ADDRESSES.microloanManager,
       abi: ABIS.microloanManager,
       functionName: 'calculateInterestRate',
-      args: [BigInt(creditScore)],
+      args: address ? [address] : undefined,
+      query: {
+        enabled: !!address,
+      },
     })
 
     return {
@@ -81,8 +85,9 @@ export function useLoans() {
 
   /**
    * Repay loan
+   * FIXED: Contract expects (loanId, amount), not just amount
    */
-  const repayLoan = async (amount: string) => {
+  const repayLoan = async (loanId: number, amount: string) => {
     if (!address) throw new Error('No wallet connected')
 
     const amountWei = parseUnits(amount, 18)
@@ -91,8 +96,7 @@ export function useLoans() {
       address: CONTRACT_ADDRESSES.microloanManager,
       abi: ABIS.microloanManager,
       functionName: 'repayLoan',
-      args: [amountWei],
-      value: amountWei,
+      args: [BigInt(loanId), amountWei],
     })
 
     return hash

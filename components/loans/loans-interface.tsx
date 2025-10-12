@@ -25,7 +25,7 @@ export function LoansInterface() {
 
   // Use hooks to fetch loan data from blockchain
   const { loan: activeLoan, isLoading, refetch: refetchLoan } = useActiveLoan()
-  const { rate: interestRate } = useInterestRate(0) // Currency.USD
+  const { rate: interestRate } = useInterestRate() // FIXED: No parameter needed
 
   const handleRepayment = async (loanId: number) => {
     if (!isConnected) {
@@ -45,7 +45,8 @@ export function LoansInterface() {
         description: "Please confirm the transaction in your wallet"
       })
 
-      await repayLoan(activeLoan?.amount || "0")
+      // FIXED: Pass loanId and amount
+      await repayLoan(loanId, activeLoan?.amount || "0")
 
       toast({
         title: "Payment successful!",
@@ -149,12 +150,27 @@ export function LoansInterface() {
                 </div>
               </div>
               <Button
-                onClick={() => setShowApplicationModal(true)}
+                onClick={() => {
+                  console.log('🔍 Loan Button Debug:', {
+                    isEligible,
+                    activeLoan,
+                    isConnected,
+                    address,
+                    disabled: !isEligible || activeLoan !== null
+                  })
+                  setShowApplicationModal(true)
+                }}
                 className="w-full"
                 disabled={!isEligible || activeLoan !== null}
               >
                 {activeLoan ? "Loan Already Active" : "Apply for Loan"}
               </Button>
+              {(!isEligible || activeLoan !== null) && (
+                <p className="text-xs text-destructive mt-2">
+                  {!isEligible && "❌ Not eligible - Connect wallet"}
+                  {activeLoan !== null && "❌ You already have an active loan"}
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

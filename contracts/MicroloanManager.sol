@@ -1,9 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+interface IRemittanceVault {
+    enum Currency { USD, MXN, BRL, ARS, COP, GTQ }
+    function getBalance(address user, Currency currency) external view returns (uint256);
+    function transferFrom(address from, address to, Currency currency, uint256 amount) external returns (bool);
+}
+
+interface IUserRegistry {
+    function getCreditScore(address user) external view returns (uint256);
+    function isRegistered(address user) external view returns (bool);
+    function isVerified(address user) external view returns (bool);
+}
+
 /**
  * @title MicroloanManager
  * @dev Credit-based lending system with repayment tracking
+ * NOW INTEGRATED with RemittanceVault and UserRegistry
  */
 contract MicroloanManager {
     uint256 private constant _NOT_ENTERED = 1;
@@ -11,7 +24,8 @@ contract MicroloanManager {
     uint256 private _status;
 
     address public owner;
-    address public userRegistryAddress;
+    IRemittanceVault public remittanceVault;
+    IUserRegistry public userRegistry;
 
     enum Currency { USD, MXN, BRL, ARS, COP, GTQ }
     enum LoanStatus { Pending, Approved, Active, Repaid, Defaulted, Rejected }
@@ -79,17 +93,27 @@ contract MicroloanManager {
         _status = _NOT_ENTERED;
     }
 
-    constructor() {
+    constructor(address _remittanceVault, address _userRegistry) {
         owner = msg.sender;
         _status = _NOT_ENTERED;
+        remittanceVault = IRemittanceVault(_remittanceVault);
+        userRegistry = IUserRegistry(_userRegistry);
     }
 
     /**
-     * @dev Set user registry contract address
+     * @dev Update remittance vault address
+     */
+    function setRemittanceVault(address _remittanceVault) external onlyOwner {
+        require(_remittanceVault != address(0), "Invalid address");
+        remittanceVault = IRemittanceVault(_remittanceVault);
+    }
+
+    /**
+     * @dev Update user registry address
      */
     function setUserRegistry(address _userRegistry) external onlyOwner {
         require(_userRegistry != address(0), "Invalid address");
-        userRegistryAddress = _userRegistry;
+        userRegistry = IUserRegistry(_userRegistry);
     }
 
     /**
@@ -104,6 +128,16 @@ contract MicroloanManager {
         require(amount >= MIN_LOAN_AMOUNT, "Amount too small");
         require(duration > 0 && duration <= MAX_LOAN_DURATION, "Invalid duration");
         require(bytes(purpose).length > 0, "Purpose required");
+        
+        // CRITICAL: Check user doesn't already have an active loan
+        uint256[] memory loanIds = userLoans[msg.sender];
+        for (uint256 i = 0; i < loanIds.length; i++) {
+            Loan memory existingLoan = loans[loanIds[i]];
+            require(
+                existingLoan.status != LoanStatus.Active && existingLoan.status != LoanStatus.Pending,
+                "You already have an active or pending loan"
+            );
+        }
 
         uint256 loanId = loans.length;
 
@@ -132,6 +166,7 @@ contract MicroloanManager {
 
     /**
      * @dev Approve a loan
+     * CRITICAL: Now transfers funds FROM RemittanceVault TO borrower
      */
     function approveLoan(uint256 loanId) external onlyOwner nonReentrant {
         require(loanId < loans.length, "Invalid loan ID");
@@ -159,6 +194,14 @@ contract MicroloanManager {
             paymentsRemaining: (loan.duration + 29) / 30 // Monthly payments
         });
 
+        // CRITICAL: Check platform reserves have enough funds
+        uint256 ownerBalance = remittanceVault.getBalance(owner, loan.currency);
+        require(ownerBalance >= loan.amount, "Insufficient platform reserves - Admin must deposit more funds");
+        
+        // TRANSFER: Give loan amount to borrower FROM platform reserves
+        // Uses platform reserves in RemittanceVault, not this contract's balance
+        require(remittanceVault.transferFrom(owner, loan.borrower, loan.currency, loan.amount), "Transfer failed");
+
         emit LoanApproved(loanId, loan.borrower, block.timestamp);
     }
 
@@ -178,6 +221,7 @@ contract MicroloanManager {
 
     /**
      * @dev Repay a loan (partial or full)
+     * CRITICAL: Now transfers funds FROM borrower TO platform
      */
     function repayLoan(uint256 loanId, uint256 amount) external nonReentrant {
         require(loanId < loans.length, "Invalid loan ID");
@@ -192,6 +236,10 @@ contract MicroloanManager {
 
         require(amount <= remainingDue, "Amount exceeds due");
 
+        // TRANSFER: Take repayment FROM borrower TO platform reserves (owner)
+        require(remittanceVault.getBalance(msg.sender, loan.currency) >= amount, "Insufficient balance");
+        require(remittanceVault.transferFrom(msg.sender, owner, loan.currency, amount), "Transfer failed");
+
         loan.amountRepaid += amount;
 
         emit LoanRepayment(loanId, msg.sender, amount, block.timestamp);
@@ -204,21 +252,29 @@ contract MicroloanManager {
     }
 
     /**
-     * @dev Calculate interest rate based on credit score
+     * @dev Calculate interest rate based on credit score FROM UserRegistry
+     * FIXED: Now actually queries UserRegistry for credit score
      */
     function calculateInterestRate(address user) public view returns (uint256) {
         // If user registry not set, use default rate
-        if (userRegistryAddress == address(0)) {
+        if (address(userRegistry) == address(0)) {
             return 1000; // 10%
         }
 
-        // In production, this would query the UserRegistry contract
-        // For now, using a simplified calculation
-        // Excellent: 5%, Good: 8%, Fair: 12%, Poor: 15%
+        // Query credit score from UserRegistry
+        uint256 creditScore = userRegistry.getCreditScore(user);
 
-        // Placeholder: Return default rate
-        // In real implementation: UserRegistry(userRegistryAddress).getCreditScore(user)
-        return 1000; // 10%
+        // Calculate rate based on credit score
+        // Excellent (750+): 5%, Good (650+): 8%, Fair (550+): 12%, Poor: 15%
+        if (creditScore >= EXCELLENT_CREDIT) {
+            return MIN_INTEREST_RATE; // 5%
+        } else if (creditScore >= GOOD_CREDIT) {
+            return 800; // 8%
+        } else if (creditScore >= FAIR_CREDIT) {
+            return 1200; // 12%
+        } else {
+            return MAX_INTEREST_RATE; // 15%
+        }
     }
 
     /**
@@ -250,6 +306,45 @@ contract MicroloanManager {
             loan.dueDate,
             loan.purpose
         );
+    }
+
+    /**
+     * @dev Get active loan for a user (returns the most recent active loan)
+     * CRITICAL: Frontend expects this function!
+     */
+    function getUserLoan(address user) external view returns (
+        uint256 loanId,
+        uint256 amount,
+        Currency currency,
+        uint256 duration,
+        uint256 interestRate,
+        LoanStatus status,
+        uint256 amountRepaid,
+        uint256 dueDate,
+        string memory purpose
+    ) {
+        uint256[] memory loanIds = userLoans[user];
+        
+        // Find most recent active loan
+        for (uint256 i = loanIds.length; i > 0; i--) {
+            Loan memory loan = loans[loanIds[i - 1]];
+            if (loan.status == LoanStatus.Active || loan.status == LoanStatus.Pending) {
+                return (
+                    loan.loanId,
+                    loan.amount,
+                    loan.currency,
+                    loan.duration,
+                    loan.interestRate,
+                    loan.status,
+                    loan.amountRepaid,
+                    loan.dueDate,
+                    loan.purpose
+                );
+            }
+        }
+        
+        // No active loan found, return empty
+        return (0, 0, Currency.USD, 0, 0, LoanStatus.Pending, 0, 0, "");
     }
 
     /**

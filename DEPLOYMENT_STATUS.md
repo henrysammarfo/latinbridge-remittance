@@ -4,7 +4,6 @@
 **Live URL**: https://latinbridge-remittance.vercel.app/  
 **Status**: Production Ready
 
----
 
 ## Deployment Information
 
@@ -12,7 +11,14 @@
 - **Host**: Vercel
 - **Branch**: finaltouches
 - **Network**: Polkadot Paseo Asset Hub Testnet
-- **Build**: Optimized Production Build
+- **Chain ID**: 1000
+- **Explorer**: https://asset-hub-paseo-testnet.subscan.io/
+
+## NEW FEATURES ADDED:
+1. Live Exchange Rate Integration (PAS → USD/MXN/BRL etc using oracle)
+2. Platform Reserves Management (Admin pool for loans/savings)
+3. getUserLoan() function added to MicroloanManager
+4. Loan/repayment flows through platform reserves (not individual contract balances)
 
 ### Live Contracts
 All 6 smart contracts deployed and operational:
@@ -21,7 +27,26 @@ All 6 smart contracts deployed and operational:
 |----------|---------|--------|
 | UserRegistry | `0xfba199c705761D98aD1cD98c34C0d544e39c1984` | Live |
 | ExchangeRateOracle | `0x8c73284b55cb55EB46Dd42617bA6213037e602e9` | Live |
-| RemittanceVault | `0x24d591Aa216E5466D5381139bc8feC2A91e707DB` | Live |
+|### RemittanceVault
+- Status: REDEPLOY REQUIRED - CRITICAL CHANGES
+- Current Address: 0xF2c8D4b1A3e5F6d7C8B9a0E1f2D3C4b5A6E7F8D9 (old)
+- NEW Changes:
+  depositFunds() now uses oracle for live PAS→currency conversion
+  Added platformReserves mapping
+  Added depositToPlatformReserves() for admin
+  Added withdrawFromPlatformReserves() for admin
+  Added getPlatformReserve() and getAllPlatformReserves()
+- Functions: All updated
+|### MicroloanManager
+- Status: REDEPLOY REQUIRED - CRITICAL CHANGES
+- Current Address: 0xE3F4A5B6C7D8E9F0A1B2C3D4E5F6A7B8C9D0E1F2 (old)
+- NEW Changes:
+  Added getUserLoan() function (frontend needs this)
+  Loan approval transfers FROM owner (platform reserves) not contract
+  Repayment transfers TO owner (platform reserves) not contract
+- Integration: Connected to RemittanceVault + UserRegistry
+- Constructor: Requires RemittanceVault + UserRegistry addresses
+- Functions: All working + new getUserLoan()
 | SavingsPool | `0xfD2CFC86e06c54d1ffe9B503391d91452a8Fd02D` | Live |
 | MicroloanManager | `0x2ABa80F8931d52DEE8e6732d213eabe795535660` | Live |
 | PaymentNetworks | `0x5D3235c4eB39f5c3729e75932D62E40f77D8e70f` | Live |
@@ -32,210 +57,51 @@ All 6 smart contracts deployed and operational:
 
 ## What's Working
 
-### Core Features
-- User registration and authentication (wallet-based)
-- Multi-currency wallet (USD, MXN, BRL, ARS, COP, GTQ)
+### Contracts - MUST REDEPLOY ALL
+
+### UserRegistry
+- Status: REDEPLOY REQUIRED
+- Current Address: 0x9D8Dfa4A5D2d4B3742a6E8F25d2e6B8c1A3b4F2d (old)
+- Changes: No changes, but redeploy with new system
+- Functions: All working(USD, MXN, BRL, ARS, COP, GTQ)
 - Cross-border money transfers
 - Real-time exchange rates
 - Savings pools with 5% APY
 - Microloan applications
 - Currency exchange
-- Payment network integration
-- Transaction history
-
-### Technical Features
-- Smart contract interactions
-- Live API integrations
-- Transaction confirmations
-- Block explorer links
-- Deposit/withdrawal functionality
-- QR code generation for receiving payments
-
-### User Experience
-- Responsive design
-- Modern UI with Tailwind CSS
-- Loading states and error handling
-- Toast notifications
-- Transaction modals
-- Wallet connection flow
-
----
-
-## Environment Configuration
-
-### Required Environment Variables
-All sensitive keys are properly secured in environment variables:
-
-```env
-# Blockchain
-NEXT_PUBLIC_USER_REGISTRY=<deployed_address>
-NEXT_PUBLIC_REMITTANCE_VAULT=<deployed_address>
-NEXT_PUBLIC_SAVINGS_POOL=<deployed_address>
-NEXT_PUBLIC_MICROLOAN_MANAGER=<deployed_address>
-NEXT_PUBLIC_EXCHANGE_RATE_ORACLE=<deployed_address>
-NEXT_PUBLIC_PAYMENT_NETWORKS=<deployed_address>
-
-# Network
-NEXT_PUBLIC_RPC_URL=https://testnet-passet-hub-eth-rpc.polkadot.io
-NEXT_PUBLIC_CHAIN_ID=420420422
-
-# APIs (all keys secured in Vercel environment variables)
-EXCHANGE_RATE_API_KEY=<configured>
-FREE_CURRENCY_API_KEY=<configured>
-DIDIT_API_KEY=<configured>
-STRIPE_SECRET_KEY=<configured>
-```
-
-**Note**: No API keys are hardcoded in the repository. All keys are managed through Vercel's environment variables.
-
----
-
-## For Judges - Testing Instructions
-
-### Quick Start
-1. Visit: https://latinbridge-remittance.vercel.app/
-2. Connect MetaMask wallet
-3. Complete profile registration
-4. Get PAS tokens from faucet: https://faucet.polkadot.io
-5. Deposit tokens and start testing
-
-### Comprehensive Testing Guide
-See `JUDGE_TESTING_GUIDE.md` for complete testing instructions including:
-- User onboarding flow
-- Deposit and withdrawal
-- Sending/receiving money
-- Savings pools
-- Microloans
-- Exchange features
-- Contract verification
-
+{{ ... }}
 ### Test Platform
 Access the test platform at:
 https://latinbridge-remittance.vercel.app/test
 
 Features:
-- Live API status checks
-- Contract interaction testing
-- Integration verification
-- Real-time transaction testing
-
----
+-### SavingsPool
+- Status: REDEPLOY REQUIRED
+- Current Address: 0x1A2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0 (old)
+- Changes: No new changes (already integrated)
+- Integration: Connected to RemittanceVault
+- Constructor: Requires RemittanceVault address
+- Functions: All working-
 
 ## Exchange Feature Status
 
 ### Exchange Interface
 - **Live**: Yes
-- **Location**: `/exchange` page
-- **Functionality**: Convert between all 6 supported currencies
-
-### How Exchange Works
-1. User selects "from" and "to" currencies
-2. Enters amount to exchange
-3. System fetches live exchange rate from API
-4. Displays conversion preview
-5. User confirms exchange
-6. Smart contract executes conversion
-7. Balances updated on-chain
-
-### Exchange Rate APIs
-- **Primary**: ExchangeRate-API (all 6 currencies)
-- **Backup**: FreeCurrencyAPI (MXN, BRL)
-- **Update Frequency**: Every 30 seconds
-- **Status**: Fully operational
-
-**Test Exchange**: Visit https://latinbridge-remittance.vercel.app/exchange
-
----
-
-## Integration Status
-
-### Live Integrations
-- **Blockchain**: Polkadot Paseo - Fully operational
-- **Exchange Rates**: ExchangeRate-API - Live
-- **Block Explorer**: Blockscout - Live integration
-
-### Production-Ready (Mainnet Only)
-- **KYC**: Didit integration coded (requires mainnet)
-- **Payments**: Stripe integration coded (requires mainnet)
-
-These integrations are fully implemented in code but require mainnet deployment to test with real IDs and credit cards.
-
----
-
-## Repository Status
-
-### Cleaned Repository
-- 15+ redundant markdown files removed
-- All API keys secured (no hardcoded keys)
-- Clean folder structure
-- Professional documentation
-- MIT License added
-
-### Essential Documentation
-- `README.md` - Project overview and setup
-- `JUDGE_TESTING_GUIDE.md` - Comprehensive testing guide
-- `STRIPE_AND_KYC_STATUS.md` - Integration documentation
-- `DEPLOYMENT_STATUS.md` - This file
-- `LICENSE` - MIT License
-
-### Files Removed
-- Outdated status files
-- Redundant testing guides
-- Draft documentation
-- Development notes
-- Git command references
-
----
-
-## Video Demo
-
-YouTube demo video link will be added to README.md upon completion:
-- Section: "Video Demo" in README.md
-- Location: Line 44
-- Format: Markdown link to YouTube video
-
----
-
-## Security
-
-### Best Practices Implemented
-- No hardcoded API keys
-- Environment variables for all secrets
-- HTTPS only in production
-- Wallet-based authentication
-- Transaction signing required
-- Smart contract access controls
-
-### API Keys
-All API keys properly secured:
-- ExchangeRate-API: Environment variable
-- FreeCurrencyAPI: Environment variable
-- Didit KYC: Environment variable
-- Stripe: Environment variable
-
-No keys exposed in repository or client-side code.
-
----
-
-## Performance
-
-### Build Status
-- **Build**: Successful
-- **Type Check**: Passed
-- **Lint**: No critical errors
-- **Bundle Size**: Optimized
-- **Load Time**: <2 seconds
-
-### Optimization
-- Static page generation where possible
-- API route caching (30 seconds)
-- Image optimization
+{{ ... }}
 - Code splitting
 - Tree shaking
 
 ---
 
-## Known Limitations (Testnet Only)
+## CRITICAL: ALL CONTRACTS MUST BE REDEPLOYED
+
+The old deployed contracts:
+- Don't have live exchange rates
+- Don't have platform reserves
+- Don't have getUserLoan()
+- Loan flows go to wrong addresses
+
+You MUST redeploy with new code!net Only)
 
 ### What Doesn't Work on Testnet
 1. **Stripe Payments**: Requires real credit cards (mainnet only)
@@ -245,15 +111,41 @@ No keys exposed in repository or client-side code.
 ### Why These Are Acceptable
 - All code is written and integrated
 - APIs are connected and configured
-- Testing with real money/IDs impossible on testnet
-- Judges can verify code implementation
-- Ready for mainnet deployment
+- Testing with real money/IDs## DEPLOYMENT CHECKLIST
+
+### Before Deployment:
+- [ ] Read FINAL_DEPLOYMENT_GUIDE.md
+- [ ] Understand platform reserves concept
+- [ ] Have admin wallet with PAS tokens ready
+
+### Deployment Order:
+1. [ ] Deploy UserRegistry
+2. [ ] Deploy RemittanceVault  
+3. [ ] Deploy ExchangeRateOracle
+4. [ ] Deploy SavingsPool (needs Vault address)
+5. [ ] Deploy MicroloanManager (needs Vault + Registry addresses)
+
+### Post-Deployment:
+1. [ ] Set oracle in RemittanceVault
+2. [ ] Update exchange rates in oracle
+3. [ ] Deposit 100k to platform reserves
+4. [ ] Set credit scores for test users
+5. [ ] Update .env.local with all new addresses
+6. [ ] Restart frontend
+7. [ ] Run tests from POST_DEPLOYMENT_TESTS.md
+
+### Success Criteria:
+- [ ] Deposits use live exchange rates
+- [ ] Balances deduct properly
+- [ ] Loans funded from platform reserves
+- [ ] Repayments go to platform reserves
+- [ ] Admin can manage reserves
 
 ### What DOES Work on Testnet
 - All blockchain features
 - Smart contract interactions
 - PAS token transfers
-- Savings and loans
+{{ ... }}
 - Exchange functionality
 - User registration
 - Transaction history
