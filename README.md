@@ -13,7 +13,7 @@
 
 **0.5% Fees** | **Instant Settlement** | **6 Currencies** | **Live on Testnet**
 
-[Live Demo](https://latinbridge-remittance.vercel.app/) | [Video Demo](#video-demo) | [Testing Guide](./JUDGE_TESTING_GUIDE.md)
+[Live Demo](https://latinbridge-remittance.vercel.app/) | [Video Demo](https://youtu.be/3Z1OSYZSAi4) | [Testing Guide](./JUDGE_TESTING_GUIDE.md)
 
 </div>
 
@@ -41,8 +41,7 @@ LatinBridge is a production-ready blockchain remittance platform built on Polkad
 
 ## Video Demo
 
-<!-- YouTube video link will be added here -->
-
+(https://youtu.be/3Z1OSYZSAi4)
 ---
 
 ## Quick Start
