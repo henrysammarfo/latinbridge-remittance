@@ -87,6 +87,35 @@ Block Explorer: https://blockscout-passet-hub.parity-testnet.parity.io
 
 ---
 
+---
+
+## 🆕 Recent Updates (October 2025)
+
+### Latest Deployment - October 12, 2025
+- **All 6 smart contracts redeployed** with latest features
+- **Platform Reserves System** - Admin can now manage platform funds
+- **Enhanced Loan System** - Added `getUserLoan()` function for better loan tracking
+- **Complete Transaction History** - Full on-chain transaction tracking with export capabilities
+- **Admin Dashboard Improvements** - Better loan management and platform reserves monitoring
+- **Withdraw Interface** - New dedicated page for withdrawing funds from LatinBridge to wallet
+
+### Key Features Added
+- Live exchange rate integration with dual API fallback
+- Real-time transaction tracking with block explorer links
+- Complete savings pool with deposit/withdraw functionality
+- Credit-based microloan system with on-chain approval
+- Multi-currency support across all features
+- Admin tools for platform management
+
+### Documentation Updates
+- Added comprehensive testing guides
+- Updated all contract addresses
+- Created demo video and pitch scripts
+- Enhanced "How It Works" documentation
+- Added loan system detailed explanation
+
+---
+
 ## 🏗️ Architecture
 
 ### Technology Stack
@@ -110,12 +139,15 @@ Block Explorer: https://blockscout-passet-hub.parity-testnet.parity.io
 
 ### Smart Contracts
 
+All contracts deployed on **October 12, 2025**
+
 | Contract | Address |
-| **UserRegistry** | `0xfba199c705761D98aD1cD98c34C0d544e39c1984` |
-| **ExchangeRateOracle** | `0x8c73284b55cb55EB46Dd42617bA6213037e602e9` |
-| **RemittanceVault** | `0x24d591Aa216E5466D5381139bc8feC2A91e707DB` |
-| **SavingsPool** | `0xfD2CFC86e06c54d1ffe9B503391d91452a8Fd02D` |
-| **MicroloanManager** | `0x2ABa80F8931d52DEE8e6732d213eabe795535660` |
+|----------|---------|
+| **UserRegistry** | `0x834244e7f0C652F2c1B248D1e1882D66a86BC22a` |
+| **ExchangeRateOracle** | `0x6C27674247e791fc1c0bDE7e728F93FAc19A0960` |
+| **RemittanceVault** | `0xd74D658Bf407AB23Db6d00cc67574724956838B2` |
+| **SavingsPool** | `0x7716BD6c58F5efc3472dC7B0F5ee3D4f14A8cc6f` |
+| **MicroloanManager** | `0x52C9ac1bEd4369f5723F9E176341704Ac4C81034` |
 | **PaymentNetworks** | `0x5D3235c4eB39f5c3729e75932D62E40f77D8e70f` |
 
 **Verify on Block Explorer**: [https://blockscout-passet-hub.parity-testnet.parity.io](https://blockscout-passet-hub.parity-testnet.parity.io)
@@ -244,11 +276,13 @@ latinbridge-remittance/
 │   ├── MicroloanManager.sol
 │   ├── ExchangeRateOracle.sol
 │   └── PaymentNetworks.sol
-├── docs/                  # Documentation
-│   ├── COMPREHENSIVE_TESTING_GUIDE.md
-│   ├── AUDIT_REPORT_MOCK_DATA.md
-│   ├── SUBMISSION_READY.md
-│   └── ...
+├── HACKATHON_SUBMISSION.md
+├── JUDGE_TESTING_GUIDE.md
+├── HOW_IT_WORKS.md
+├── HOW_LOANS_WORK.md
+├── LATIN_HACK_SUBMISSION_CHECKLIST.md
+├── PITCH_SCRIPT.md
+├── DEMO_VIDEO_SCRIPT.md
 └── ...
 ```
 
@@ -256,14 +290,16 @@ latinbridge-remittance/
 
 ## 📚 Documentation
 
-### For Developers
-- **[Testing Guide](./docs/COMPREHENSIVE_TESTING_GUIDE.md)** - Complete testing manual
-- **[Audit Report](./docs/AUDIT_REPORT_MOCK_DATA.md)** - Data authenticity verification
-- **[Deployment Guide](./docs/DEPLOYMENT_COMPLETE.md)** - Smart contract deployment
+### For Judges & Hackathon
+- **[Submission Checklist](./LATIN_HACK_SUBMISSION_CHECKLIST.md)** - Complete requirements verification
+- **[Hackathon Submission](./HACKATHON_SUBMISSION.md)** - Full project submission document
+- **[Judge Testing Guide](./JUDGE_TESTING_GUIDE.md)** - Step-by-step testing instructions
+- **[Pitch Script](./PITCH_SCRIPT.md)** - Presentation guide
+- **[Demo Video Script](./DEMO_VIDEO_SCRIPT.md)** - Video recording guide
 
-### For Judges
-- **[Submission Ready](./docs/SUBMISSION_READY.md)** - Demo script & checklist
-- **[API Status](./docs/API_FINAL_STATUS.md)** - Integration details
+### Technical Documentation
+- **[How It Works](./HOW_IT_WORKS.md)** - Complete system architecture explanation
+- **[How Loans Work](./HOW_LOANS_WORK.md)** - Microloan system deep dive
 
 ### API Documentation
 
@@ -379,6 +415,10 @@ This is a hackathon project for LATIN HACK 2025. For production deployment:
 ---
 
 ## Built for LATIN HACK 2025
+
+**Hackathon Track:** Prototype - Prove it Works on Blockchain
+
+📋 **[View Complete Submission Checklist](./LATIN_HACK_SUBMISSION_CHECKLIST.md)** - Verify all requirements are met
 
 ### Key Highlights
 

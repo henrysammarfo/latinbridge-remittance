@@ -1,8 +1,9 @@
 # LatinBridge - Demo Video Script
 ## LATIN HACK 2025 Submission
+**Track:** Prototype - Prove it Works on Blockchain
 
-**Total Duration:** 3-4 minutes  
-**Format:** Screen recording with voiceover  
+**Total Duration:** 3-4 minutes
+**Format:** Screen recording with voiceover
 **Style:** Professional, clear, focused on functionality
 
 ---

@@ -1,7 +1,8 @@
 # 🎯 LatinBridge - Judge Testing Guide
 
-**Platform**: Polkadot Paseo Testnet  
-**Date**: October 11, 2025  
+**Platform**: Polkadot Paseo Testnet
+**Hackathon Track**: Prototype - Prove it Works on Blockchain
+**Contract Deployment Date**: October 12, 2025
 **Status**: Ready for Testing
 
 ---
@@ -45,10 +46,16 @@ This is a **PRODUCT**, not a prototype. Here's what's live:
 ### **✅ Fully Functional on Testnet**
 
 #### **1. Blockchain Integration**
-- 6 deployed smart contracts on Polkadot Paseo
+- 6 deployed smart contracts on Polkadot Paseo (deployed October 12, 2025)
 - Every transaction is real and on-chain
 - Verify transactions on Blockscout explorer
-- Smart contracts: UserRegistry, RemittanceVault, SavingsPool, MicroloanManager, ExchangeRateOracle, PaymentNetworks
+- Smart contracts deployed at:
+  - UserRegistry: `0x834244e7f0C652F2c1B248D1e1882D66a86BC22a`
+  - ExchangeRateOracle: `0x6C27674247e791fc1c0bDE7e728F93FAc19A0960`
+  - RemittanceVault: `0xd74D658Bf407AB23Db6d00cc67574724956838B2`
+  - SavingsPool: `0x7716BD6c58F5efc3472dC7B0F5ee3D4f14A8cc6f`
+  - MicroloanManager: `0x52C9ac1bEd4369f5723F9E176341704Ac4C81034`
+  - PaymentNetworks: `0x5D3235c4eB39f5c3729e75932D62E40f77D8e70f`
 
 #### **2. User Management**
 - Wallet-based authentication (no passwords)
