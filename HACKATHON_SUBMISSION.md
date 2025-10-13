@@ -10,6 +10,8 @@
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge)](https://github.com/henrysammarfo/latinbridge-remittance)
 [![Built on Polkadot](https://img.shields.io/badge/Built_on-Polkadot-E6007A?style=for-the-badge)](https://polkadot.network/)
 
+**Hackathon Track:** Prototype - Prove it Works on Blockchain
+
 ### 0.5% Fees • Instant Settlement • 6 Currencies • Live on Testnet
 
 </div>
@@ -310,15 +312,15 @@ Block Explorer: https://blockscout-passet-hub.parity-testnet.parity.io
 
 ### Deployed Contracts on Polkadot Paseo
 
-All contracts are **verified and publicly accessible** on the block explorer:
+All contracts deployed on **October 12, 2025** and are **verified and publicly accessible** on the block explorer:
 
 | Contract | Address | Purpose |
 |----------|---------|---------|
-| **UserRegistry** | `0xfba199c705761D98aD1cD98c34C0d544e39c1984` | User accounts, KYC tiers, balances |
-| **ExchangeRateOracle** | `0x8c73284b55cb55EB46Dd42617bA6213037e602e9` | On-chain exchange rate storage |
-| **RemittanceVault** | `0x24d591Aa216E5466D5381139bc8feC2A91e707DB` | Cross-border transfer logic |
-| **SavingsPool** | `0xfD2CFC86e06c54d1ffe9B503391d91452a8Fd02D` | Savings deposits and interest |
-| **MicroloanManager** | `0x2ABa80F8931d52DEE8e6732d213eabe795535660` | Loan applications and credit scoring |
+| **UserRegistry** | `0x834244e7f0C652F2c1B248D1e1882D66a86BC22a` | User accounts, KYC tiers, balances |
+| **ExchangeRateOracle** | `0x6C27674247e791fc1c0bDE7e728F93FAc19A0960` | On-chain exchange rate storage |
+| **RemittanceVault** | `0xd74D658Bf407AB23Db6d00cc67574724956838B2` | Cross-border transfer logic |
+| **SavingsPool** | `0x7716BD6c58F5efc3472dC7B0F5ee3D4f14A8cc6f` | Savings deposits and interest |
+| **MicroloanManager** | `0x52C9ac1bEd4369f5723F9E176341704Ac4C81034` | Loan applications and credit scoring |
 | **PaymentNetworks** | `0x5D3235c4eB39f5c3729e75932D62E40f77D8e70f` | Local payment network routing |
 
 ### Contract Statistics

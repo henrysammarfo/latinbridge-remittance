@@ -1,5 +1,6 @@
 # LatinBridge - Pitch Script
 ## LATIN HACK 2025 Submission
+**Track:** Prototype - Prove it Works on Blockchain
 
 ---
 
