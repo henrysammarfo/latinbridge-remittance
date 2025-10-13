@@ -136,7 +136,7 @@ export function ExchangeInterface() {
         description: `Converting ${fromAmount} ${fromCurrency} to ${toCurrency}`,
       })
 
-      // Reset form after successful exchange
+      // Wait for transaction to be mined
       setTimeout(() => {
         setTxState('success')
 
@@ -145,12 +145,19 @@ export function ExchangeInterface() {
           updateTransactionStatus(address, hash, 'success')
         }
 
+        toast({
+          title: "Exchange successful!",
+          description: `Your ${toCurrency} balance has been updated`,
+        })
+
         // Trigger balance refresh
         window.dispatchEvent(new Event('balanceUpdate'))
 
-        setFromAmount('')
-        setToAmount('')
-      }, 2000)
+        // After showing success, redirect to dashboard to see updated balance
+        setTimeout(() => {
+          window.location.href = '/dashboard'
+        }, 2000)
+      }, 3000)
 
     } catch (error: any) {
       console.error('Exchange error:', error)
