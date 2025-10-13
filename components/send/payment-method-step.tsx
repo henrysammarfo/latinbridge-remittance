@@ -44,7 +44,8 @@ interface PaymentMethodStepProps {
 }
 
 export function PaymentMethodStep({ data, updateData, onNext, onBack }: PaymentMethodStepProps) {
-  const [selectedMethod, setSelectedMethod] = useState(data.paymentMethod || "")
+  // Auto-select wallet method by default since it's the only available option
+  const [selectedMethod, setSelectedMethod] = useState(data.paymentMethod || "wallet")
 
   const handleNext = () => {
     updateData({ paymentMethod: selectedMethod })
@@ -63,7 +64,7 @@ export function PaymentMethodStep({ data, updateData, onNext, onBack }: PaymentM
                 key={method.id}
                 className="flex items-center gap-4 p-4 rounded-lg border-2 border-primary bg-primary/5 cursor-pointer"
               >
-                <RadioGroupItem value={method.id} checked={method.recommended} />
+                <RadioGroupItem value={method.id} />
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                   <method.icon className="h-5 w-5 text-primary" />
                 </div>

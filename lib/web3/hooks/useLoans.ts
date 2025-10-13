@@ -22,8 +22,17 @@ export function useLoans() {
       },
     })
 
+    // Check if loan is actually active
+    // If amount is 0 or borrower is zero address, there's no active loan
+    const loanData = loan as any
+    const hasActiveLoan = loanData &&
+                         loanData.amount &&
+                         Number(loanData.amount) > 0 &&
+                         loanData.borrower &&
+                         loanData.borrower !== '0x0000000000000000000000000000000000000000'
+
     return {
-      loan: loan as any,
+      loan: hasActiveLoan ? loanData : null,
       isLoading,
       refetch,
     }

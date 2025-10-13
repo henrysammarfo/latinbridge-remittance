@@ -170,11 +170,13 @@ export function LoansInterface() {
               </div>
               <Button
                 onClick={() => {
-                  console.log('🔍 Loan Button Debug:', {
+                  console.log('🔍 Loan Application Debug:', {
                     isEligible,
                     activeLoan,
+                    hasActiveLoan: activeLoan !== null,
                     isConnected,
                     address,
+                    loanAmount: activeLoan?.amount,
                     disabled: !isEligible || activeLoan !== null
                   })
                   setShowApplicationModal(true)
@@ -182,12 +184,11 @@ export function LoansInterface() {
                 className="w-full"
                 disabled={!isEligible || activeLoan !== null}
               >
-                {activeLoan ? "Loan Already Active" : "Apply for Loan"}
+                Apply for Loan
               </Button>
-              {(!isEligible || activeLoan !== null) && (
+              {activeLoan !== null && (
                 <p className="text-xs text-destructive mt-2">
-                  {!isEligible && "❌ Not eligible - Connect wallet"}
-                  {activeLoan !== null && "❌ You already have an active loan"}
+                  ❌ You already have an active loan
                 </p>
               )}
             </div>

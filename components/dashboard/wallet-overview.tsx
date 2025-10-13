@@ -23,13 +23,20 @@ export function WalletOverview() {
   })
 
   // Get balances for all 6 currencies
+  const usdBalance = useBalanceOf(Currency.USD)
+  const mxnBalance = useBalanceOf(Currency.MXN)
+  const brlBalance = useBalanceOf(Currency.BRL)
+  const arsBalance = useBalanceOf(Currency.ARS)
+  const copBalance = useBalanceOf(Currency.COP)
+  const gtqBalance = useBalanceOf(Currency.GTQ)
+
   const balances = {
-    USD: useBalanceOf(Currency.USD),
-    MXN: useBalanceOf(Currency.MXN),
-    BRL: useBalanceOf(Currency.BRL),
-    ARS: useBalanceOf(Currency.ARS),
-    COP: useBalanceOf(Currency.COP),
-    GTQ: useBalanceOf(Currency.GTQ),
+    USD: usdBalance,
+    MXN: mxnBalance,
+    BRL: brlBalance,
+    ARS: arsBalance,
+    COP: copBalance,
+    GTQ: gtqBalance,
   }
 
   // Get savings balance
@@ -60,14 +67,19 @@ export function WalletOverview() {
     const handleBalanceUpdate = () => {
       console.log('🔄 Balance update event received - refreshing all balances')
       // Refetch all currency balances
-      Object.values(balances).forEach(balance => balance.refetch())
+      usdBalance.refetch()
+      mxnBalance.refetch()
+      brlBalance.refetch()
+      arsBalance.refetch()
+      copBalance.refetch()
+      gtqBalance.refetch()
       // Refetch savings balance
       savingsUSD.refetch()
     }
 
     window.addEventListener('balanceUpdate', handleBalanceUpdate)
     return () => window.removeEventListener('balanceUpdate', handleBalanceUpdate)
-  }, [balances, savingsUSD])
+  }, [usdBalance, mxnBalance, brlBalance, arsBalance, copBalance, gtqBalance, savingsUSD])
 
   if (!isConnected) {
     return (

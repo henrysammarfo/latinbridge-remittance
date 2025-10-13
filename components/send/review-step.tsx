@@ -155,8 +155,8 @@ export function ReviewStep({ data, onConfirm, onBack }: ReviewStepProps) {
       if (err?.message) {
         if (err.message.includes('User rejected')) {
           errorMessage = 'Transaction rejected by user'
-        } else if (err.message.includes('insufficient funds')) {
-          errorMessage = 'Insufficient funds in wallet'
+        } else if (err.message.includes('insufficient funds') || err.message.includes('insufficient balance')) {
+          errorMessage = 'Insufficient funds in your LatinBridge balance. Please deposit more funds.'
         } else {
           errorMessage = err.message
         }
@@ -226,6 +226,9 @@ export function ReviewStep({ data, onConfirm, onBack }: ReviewStepProps) {
               <div className="flex-1">
                 <div className="text-sm text-muted-foreground mb-1">Payment Method</div>
                 <div className="font-medium">{paymentMethodName}</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Funds will be deducted from your LatinBridge balance
+                </div>
               </div>
             </div>
           </div>
@@ -250,11 +253,18 @@ export function ReviewStep({ data, onConfirm, onBack }: ReviewStepProps) {
               </span>
             </div>
             <div className="flex items-center justify-between pt-3 border-t">
-              <span className="font-semibold">Total to Pay</span>
+              <span className="font-semibold">Total from LatinBridge Balance</span>
               <span className="text-lg font-bold text-primary">
                 {total.toFixed(2)} {data.fromCurrency}
               </span>
             </div>
+          </div>
+
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-sm">
+            <p className="text-blue-900 dark:text-blue-100">
+              💡 <strong>Note:</strong> This amount will be deducted from your LatinBridge platform balance, not directly from your MetaMask wallet.
+              Make sure you have sufficient balance in your LatinBridge account.
+            </p>
           </div>
 
           <div className="flex gap-3 pt-4 border-t">
